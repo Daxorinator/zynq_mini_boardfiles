@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<!-- Physical pin location and I/O standards for component interfaces described in board.xml -->
+<!-- Sources: ZYNQ_MINI_REVB schematic (pages 5, 9), hardware spec, vendor example XDC files. -->
+<part_info part_name="xc7z010clg400-1">
+	<pins>
+		<!-- PL user LEDs LED1..LED4 (D2..D5), active high, BANK34 -->
+		<pin index="0" name="leds_4bits_tri_o_0" iostandard="LVCMOS33" loc="T12"/>
+		<pin index="1" name="leds_4bits_tri_o_1" iostandard="LVCMOS33" loc="U12"/>
+		<pin index="2" name="leds_4bits_tri_o_2" iostandard="LVCMOS33" loc="V12"/>
+		<pin index="3" name="leds_4bits_tri_o_3" iostandard="LVCMOS33" loc="W13"/>
+
+		<!-- PL user buttons K2 (PL_KEY1) and K3 (PL_KEY2), active low, BANK35 -->
+		<pin index="4" name="push_buttons_2bits_tri_i_0" iostandard="LVCMOS33" loc="M20"/>
+		<pin index="5" name="push_buttons_2bits_tri_i_1" iostandard="LVCMOS33" loc="M19"/>
+
+		<!-- 50 MHz PL system clock, BANK35 (IO_L12P_T1_MRCC_35) -->
+		<pin index="6" name="sys_clock" iostandard="LVCMOS33" loc="K17"/>
+	</pins>
+</part_info>
