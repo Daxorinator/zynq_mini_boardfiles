@@ -76,10 +76,23 @@ Verified:
 - The board appears in the project wizard, the PS7 preset and the LED/button interfaces can be used in a block design, which validates OK, implementation and bitstream both OK
 - A Vitis 2024.1 application utilising the bitstream from Vivado builds and connects over JTAG OK
 
+Verified on hardware (via the PYNQ build in [`pynq/`](pynq/)):
+- PS preset: 512 MB DDR3, SD0 boot, PS Ethernet at 1 Gb/s, UART1 console
+- PL LEDs and keys through AXI GPIO blocks on the `leds_4bits` / `push_buttons_2bits` interfaces
+- SD1 (hot-plug), QSPI flash as MTD (W25Q128, 3 partitions), PS LED/KEY1 GPIO, XADC, USB host (full-speed keyboard, high-speed flash drive)
+- USB device mode: mass storage, and serial plus Ethernet (CDC ACM + NCM) to a Windows 11 PC
+- PL: clocks (50 MHz oscillator and MMCM), 34-pin expansion header, timer interrupt, AXI DMA, AT24C02 EEPROM, PL Ethernet PHY over MDIO (tests in [`pynq/overlay/pltest`](pynq/overlay/pltest/))
+
 Not Verified:
 - Behaviour on other Vivado versions
-- Remaining peripheral presets (Ethernet, USB, SD) on hardware
+- HDMI output and the PL Ethernet data path (a design builds for HDMI, neither has been run with a cable), and the OLED beyond "data was sent"
 - Issues and pull requests are welcome, especially from anyone with a different board revision.
+
+## PYNQ
+
+[`pynq/`](pynq/) has everything needed to build a PYNQ v3.1.2 SD card image for this board (Vivado, Vitis and
+PetaLinux 2024.1): the `sdbuild` board spec, the Vivado Tcl, an LED/key overlay, a PetaLinux patch, a build script and
+peripheral test scripts. See [`pynq/BUILDING.md`](pynq/BUILDING.md). No prebuilt image is published yet.
 
 ## License
 
