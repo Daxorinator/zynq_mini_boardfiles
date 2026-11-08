@@ -1,0 +1,12 @@
+# HDMI out (TMDS_33, BANK35; the board has 39 ohm pull-ups to 3.3 V on each pair). Pins: spec section 10.
+set_property -dict {PACKAGE_PIN H16 IOSTANDARD TMDS_33} [get_ports tmds_clk_p]
+set_property -dict {PACKAGE_PIN H17 IOSTANDARD TMDS_33} [get_ports tmds_clk_n]
+set_property -dict {PACKAGE_PIN D19 IOSTANDARD TMDS_33} [get_ports {tmds_d_p[0]}]
+set_property -dict {PACKAGE_PIN D20 IOSTANDARD TMDS_33} [get_ports {tmds_d_n[0]}]
+set_property -dict {PACKAGE_PIN C20 IOSTANDARD TMDS_33} [get_ports {tmds_d_p[1]}]
+set_property -dict {PACKAGE_PIN B20 IOSTANDARD TMDS_33} [get_ports {tmds_d_n[1]}]
+set_property -dict {PACKAGE_PIN B19 IOSTANDARD TMDS_33} [get_ports {tmds_d_p[2]}]
+set_property -dict {PACKAGE_PIN A20 IOSTANDARD TMDS_33} [get_ports {tmds_d_n[2]}]
+set_property -dict {PACKAGE_PIN H18 IOSTANDARD LVCMOS33} [get_ports hdmi_oe]
+set_property -dict {PACKAGE_PIN K17 IOSTANDARD LVCMOS33} [get_ports clk50]
+create_clock -period 20.000 -name clk50 [get_ports clk50]

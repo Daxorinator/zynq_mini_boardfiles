@@ -1,0 +1,32 @@
+/dts-v1/;
+/plugin/;
+/*
+ * UIO devices for the PL interrupts of the pltest overlay, so user space can wait on them
+ * (the stock kernel command line sets uio_pdrv_genirq.of_id="generic-uio").
+ * IRQ_F2P[n] is GIC SPI 29 + n for n = 0..7. One node per interrupt line. IRQ_F2P[0] already has the stock
+ * 'fabric' UIO node (used for the timer), so only [1] and [2] (DMA) and [3] (keys) are added here.
+ */
+/ {
+	fragment@0 {
+		target-path = "/axi";
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <1>;
+			pltest_dma_mm2s: uio@40400000 {
+				compatible = "generic-uio";
+				reg = <0x40400000 0x100>;
+				interrupts = <0 30 4>;
+			};
+			pltest_dma_s2mm: uio@40400100 {
+				compatible = "generic-uio";
+				reg = <0x40400100 0x100>;
+				interrupts = <0 31 4>;
+			};
+			pltest_keys: uio@41210000 {
+				compatible = "generic-uio";
+				reg = <0x41210000 0x10000>;
+				interrupts = <0 32 4>;
+			};
+		};
+	};
+};
