@@ -1,0 +1,68 @@
+/include/ "system-conf.dtsi"
+/ {
+	/*
+	 * ULPI PHY for the PS USB controller (USB3320 on MIO28-39, PHY reset MIO46).
+	 * Same approach as the PYNQ-Z2 board. Without a usb-phy reference the Xilinx chipidea
+	 * driver (ci_hdrc_usb2_probe) fails silently for "xlnx,zynq-usb-2.20a", so the USB
+	 * port never enumerates anything.
+	 */
+	usb_phy0: phy0 {
+		compatible = "ulpi-phy";
+		#phy-cells = <0>;
+		reg = <0xe0002000 0x1000>;
+		view-port = <0x170>;
+		drv-vbus;
+	};
+};
+
+/*
+ * Role is chosen in software (/sys/class/usb_role/ci_hdrc.0-role-switch/role, see zynqmini-usb-role).
+ * With dr_mode unset the controller runs in OTG mode and senses ID/VBUS through the ULPI PHY; in that
+ * mode the PHY clock/interface dies after seconds to minutes with a gadget bound and the USB link
+ * stalls (UDC still "configured"). usb-role-switch masks the hardware sensing and fixes it.
+ */
+&usb0 {
+	usb-phy = <&usb_phy0>;
+	dr_mode = "otg";
+	usb-role-switch;
+};
+
+/*
+ * SD1 (second TF slot, MIO10-15) has no card-detect line on this board. Without this the
+ * kernel only looks for a card once at boot, so cards inserted later are never noticed.
+ * broken-cd makes the MMC core poll the slot instead. SD0 (boot card) is left alone.
+ */
+&sdhci1 {
+	broken-cd;
+};
+
+/*
+ * QSPI flash (W25Q128FV, 16 MB, MIO1-6). The generated flash@0 node (system-conf.dtsi) has
+ * partitions but no compatible and no reg, so the kernel logs "cannot find modalias" and no
+ * MTD device appears. jedec,spi-nor lets the spi-nor driver identify the part by its JEDEC ID.
+ */
+&flash0 {
+	compatible = "jedec,spi-nor";
+	reg = <0>;
+	spi-max-frequency = <50000000>;
+	#address-cells = <1>;
+	#size-cells = <1>;
+};
+
+/*
+ * Ethernet PHY (RTL8211E on MDIO address 0). Without a phy-handle / mdio child the macb driver falls back to
+ * scanning all 32 MDIO addresses at probe time, which blocked the whole kernel init thread for 38 s on every
+ * boot (the next message after "CAN device driver interface" arrived at 40 s instead of 2 s). Describing the
+ * PHY explicitly skips the scan.
+ */
+&gem0 {
+	phy-handle = <&phy0>;
+	mdio {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		phy0: ethernet-phy@0 {
+			reg = <0>;
+			device_type = "ethernet-phy";
+		};
+	};
+};

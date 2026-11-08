@@ -1,0 +1,11 @@
+--- a/scripts/petalinux-package	2026-11-06 14:14:47.144850650 +0000
++++ b/scripts/petalinux-package	2026-11-06 14:14:47.146850678 +0000
+@@ -124,7 +124,7 @@
+         else:
+             proot = plnx_utils.exit_not_plnx_project(proot='')
+ 
+-    args.builddir = plnx_vars.BuildDir.format(proot)
++    args.builddir = plnx_vars.BuildDir.format(proot if proot else (os.path.realpath((args.project[0] if isinstance(args.project, list) else args.project)) if getattr(args, 'project', None) else '/tmp'))
+     plnx_utils.CreateDir(args.builddir)
+     args.command = os.path.basename(sys.argv[0])
+     args.logfile = plnx_vars.PkgFileName
