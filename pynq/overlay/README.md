@@ -7,7 +7,7 @@ Everything here is built with Vivado 2024.1 through `../build.sh` and lands in `
 |---|---|---|---|
 | `leds_keys` | `./build.sh overlay` | AXI GPIO on LED1..4 and KEY2/KEY3; `leds_keys_test.py` | verified on hardware |
 | `pltest/` | `./build.sh pltest [jobs]` | One design that exercises the PL with no cable or add-on board: LEDs/keys, 34 header pins, PL clocks (frequency meter), timer interrupt, AXI DMA loopback, AT24C02 EEPROM, SSD1306 OLED, PL Ethernet PHY over MDIO. Runner: `pltest_run.py` | see below |
-| `hdmi_test/` | `./build.sh hdmi [jobs]` | 640x480@60 Hz test pattern from a plain RTL TMDS transmitter (no licensed IP); `hdmi_test.py` | built only, **never run with a monitor** |
+| `hdmi_test/` | `./build.sh hdmi [jobs]` | 640x480@60 Hz test pattern from a plain RTL TMDS transmitter (no licensed IP); `hdmi_test.py` | verified: colour bars correct on a monitor |
 
 ## `pltest`
 

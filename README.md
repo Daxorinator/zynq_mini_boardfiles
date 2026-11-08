@@ -81,11 +81,11 @@ Verified on hardware (via the PYNQ build in [`pynq/`](pynq/)):
 - PL LEDs and keys through AXI GPIO blocks on the `leds_4bits` / `push_buttons_2bits` interfaces
 - SD1 (hot-plug), QSPI flash as MTD (W25Q128, 3 partitions), PS LED/KEY1 GPIO, XADC, USB host (full-speed keyboard, high-speed flash drive)
 - USB device mode: mass storage, and serial plus Ethernet (CDC ACM + NCM) to a Windows 11 PC
-- PL: clocks (50 MHz oscillator and MMCM), 34-pin expansion header, timer interrupt, AXI DMA, AT24C02 EEPROM, PL Ethernet PHY over MDIO (tests in [`pynq/overlay/pltest`](pynq/overlay/pltest/))
+- PL: clocks (50 MHz oscillator and MMCM), 34-pin expansion header, timer interrupt, AXI DMA, AT24C02 EEPROM, SSD1306 OLED, HDMI 640x480 colour bars, PL Ethernet PHY over MDIO (tests in [`pynq/overlay/pltest`](pynq/overlay/pltest/))
 
 Not Verified:
 - Behaviour on other Vivado versions
-- HDMI output and the PL Ethernet data path (a design builds for HDMI, neither has been run with a cable), and the OLED beyond "data was sent"
+- The PL Ethernet data path (the RGMII path is not built and has not been run with a cable)
 - Issues and pull requests are welcome, especially from anyone with a different board revision.
 
 ## PYNQ

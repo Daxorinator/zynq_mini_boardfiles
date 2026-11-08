@@ -1,4 +1,4 @@
-# HDMI test pattern overlay (RTL TMDS transmitter, no licensed IP). BUILD-ONLY: it has not been run with a monitor.
+# HDMI test pattern overlay (RTL TMDS transmitter, no licensed IP). Verified on hardware: colour bars correct on a monitor.
 #   ctrl  AXI GPIO @ auto address, 3 outputs: bit0 = HDMI 5 V output enable, bits 2:1 = pattern (0 bars, 1 ramp, 2 checks, 3 white)
 # Outputs (git-ignored): overlay/out/hdmi_test.bit / .hwh
 # usage: vivado -mode batch -source build_hdmi_test.tcl -tclargs <boardfiles repo> [jobs]

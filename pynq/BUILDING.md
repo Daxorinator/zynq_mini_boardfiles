@@ -20,7 +20,7 @@ device, and loads overlays. A custom LED + key overlay works on hardware. Other 
 | `overlay/build_overlay.tcl` | Vivado: LED + key overlay (two AXI GPIOs on the board interfaces) |
 | `overlay/leds_keys_test.py` | Demo for that overlay |
 | `overlay/pltest/` | PL self-test overlay (`./build.sh pltest`) and its on-board runner `pltest_run.py`: LEDs/keys, header, clocks, timer interrupt, DMA, EEPROM, OLED, PL Ethernet PHY |
-| `overlay/hdmi_test/` | HDMI test-pattern overlay (`./build.sh hdmi`), built but never run with a monitor |
+| `overlay/hdmi_test/` | HDMI test-pattern overlay (`./build.sh hdmi`), verified on a monitor |
 | `overlay/README.md` | What each overlay and PL test checks |
 | `patches/petalinux-package-bsp.patch` | Fix for a PetaLinux 2024.1 bug that breaks BSP packaging |
 | `build.sh` | `xsa`, `overlay`, `pltest`, `hdmi` and `image` build steps with the required environment |
@@ -170,8 +170,8 @@ exactly that with a card that verified fine.
 | Boot time (`systemd-analyze`) | Lease at 27 s (was 34 s), Jupyter started at 43 s (was 44 s), 56.5 s total (was 58.3 s); the rest is CPU-bound start-up of Jupyter on two Cortex-A9 cores |
 | PL test overlay: LEDs/keys, clocks, timer interrupt through UIO, DMA loopback (375 to 400 MB/s) with interrupts, EEPROM (AT24C02 at 0x50), PL Ethernet PHY (RTL8211E ID) | Verified on hardware (`overlay/pltest/pltest_run.py`) |
 | PL expansion header (34 signals) | Verified: every signal drives high and low, no coupling between pins (nothing plugged in) |
-| OLED | Pattern written to the SSD1306; the display cannot be read back, so it needs a look at the screen |
-| HDMI output, PL Ethernet data path (RGMII) | Not tested (need a monitor / cable). The HDMI design builds (`./build.sh hdmi`); the RGMII path is not built (the AXI Ethernet IP needs a licence) |
+| OLED | Pattern written to the SSD1306 and confirmed visually (the display cannot be read back) |
+| PL Ethernet data path (RGMII) | Not tested (needs a cable). The RGMII path is not built (the AXI Ethernet IP needs a licence). HDMI output is verified: 640x480 colour bars display correctly on a monitor |
 
 ## Known issues
 
