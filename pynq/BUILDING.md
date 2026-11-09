@@ -187,8 +187,14 @@ exactly that with a card that verified fine.
   too high and, worse, programmed the dividers from the overlay's `.hwh` so a requested 100 MHz FCLK0 really ran at
   66.7 MHz. `zynqmini_tweaks/qemu.sh` now sets the default to 33.333 in the installed `ps.py` (and fails the build if the
   patch does not apply). Found by measuring the PL clocks with an RTL frequency meter against FCLK0.
-- **Two `Wrong NTH SIGN` messages from the NCM gadget** (corrupted NTB header, `skblen 1537`) appeared once, about
-  three minutes into a session, then nothing else in 300 pings. Not investigated.
+- **Occasional `Wrong NTH SIGN` from the NCM gadget** (`skblen 1537` and `1025`): the Windows NCM driver sometimes
+  sends a 32-bit-format NTB (`ncmh`) although the gadget only offers 16-bit. The gadget drops that one frame (seen
+  with mDNS multicast). Harmless: no losses in 600+ pings or 35 downloads of 3 MB at about 20 MB/s.
+- **One NCM bulk stall, seen once.** After a long idle, the first multi-hundred-KB download from the board stopped at
+  exactly 256 KiB; the PC stopped polling the bulk IN endpoint (about 40 transfers queued on the board, UDC still
+  `configured`, nothing in either kernel log). A 2 s UDC unbind/rebind did not clear it; a 6 s unbind did (Windows
+  re-enumerated). Not reproduced in 40 further downloads or after a reboot. Workaround:
+  `echo "" > /sys/kernel/config/usb_gadget/zynqmini_net/UDC; sleep 6; echo ci_hdrc.0 > .../UDC`.
 - **The serial gadget logs in as `xilinx` without a password**, like the UART console (stock PYNQ behaviour). Anyone
   who can plug a cable in gets a shell.
 - **USB gadget stalls in OTG mode (fixed with a software role switch).** With `dr_mode` unset (OTG) and a gadget bound,
