@@ -195,6 +195,9 @@ exactly that with a card that verified fine.
   `configured`, nothing in either kernel log). A 2 s UDC unbind/rebind did not clear it; a 6 s unbind did (Windows
   re-enumerated). Not reproduced in 40 further downloads or after a reboot. Workaround:
   `echo "" > /sys/kernel/config/usb_gadget/zynqmini_net/UDC; sleep 6; echo ci_hdrc.0 > .../UDC`.
+- **Default credentials and SSH keys.** The image uses stock PYNQ accounts: user `xilinx`, password `xilinx`
+  (also the Jupyter password). Change them before exposing the board to a network. No SSH host keys are shipped;
+  each board generates its own on first boot (`zynqmini-sshkeys.service`).
 - **The serial gadget logs in as `xilinx` without a password**, like the UART console (stock PYNQ behaviour). Anyone
   who can plug a cable in gets a shell.
 - **USB gadget stalls in OTG mode (fixed with a software role switch).** With `dr_mode` unset (OTG) and a gadget bound,
@@ -260,14 +263,14 @@ exactly that with a card that verified fine.
 - `/sys/class/fpga_manager/fpga0/state` can read `unknown` when the PL was configured by the FSBL at boot. It
   becomes `operating` after an overlay is loaded.
 
-## TODO: releasing the PYNQ build
+## Releasing the PYNQ build
 
-Not decided yet; assess before publishing anything. This repository deliberately contains **no binaries**
-from the build: not the 8 GB `ZynqMini-3.1.2.img`, and not `BOOT.BIN`, `boot.scr` or `image.ub`.
-Questions to settle:
+The repository deliberately contains **no binaries** from the build. Releases attach them as GitHub release assets:
 
-- Whether to publish the full image at all. It bundles an Ubuntu rootfs and AMD/Xilinx PetaLinux components, so
-  check the licensing before hosting it. GitHub release assets are limited to 2 GiB per file.
-- Whether the small boot files (`BOOT.BIN`, `boot.scr`, `image.ub`, about 8 MB) are worth releasing on their own,
-  for people who already have a PYNQ rootfs.
-- Whether the build instructions alone are enough, with CI or a script that fetches the AMD inputs.
+- `ZynqMini-3.1.2.img.zip` (the 8 GB SD card image, zipped to about 1.7 GiB, under GitHub's 2 GiB per-file limit),
+  flashed with Balena Etcher / Raspberry Pi Imager / `dd` after unzipping.
+- `zynq_mini_boardfiles.zip` (the Vivado board files from `zynq_mini/`).
+- `SHA256SUMS`.
+
+The image is a derivative of the stock PYNQ image (Ubuntu rootfs, AMD PetaLinux kernel and boot files), so it
+carries the licences of those components.
