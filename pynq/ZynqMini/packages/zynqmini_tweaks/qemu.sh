@@ -203,6 +203,27 @@ z = t[t.index("class _ClocksZynq"):t.index("class Clocks(")]
 assert "DEFAULT_SRC_CLK_MHZ = 33.333" in z, "ps.py patch did not apply"
 PY
 
+# 8. No SSH host keys in the image. The stock rootfs ships pre-generated host keys, so every copy of a distributed image
+#    would share the same private keys (anyone could impersonate any board). Remove them and generate fresh ones on the
+#    first boot, before sshd starts.
+rm -f /etc/ssh/ssh_host_*_key /etc/ssh/ssh_host_*_key.pub
+cat > /etc/systemd/system/zynqmini-sshkeys.service <<'UNIT'
+[Unit]
+Description=Generate missing SSH host keys
+Before=ssh.service
+ConditionPathExists=!/etc/ssh/ssh_host_ed25519_key
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/ssh-keygen -A
+[Install]
+WantedBy=multi-user.target
+RequiredBy=ssh.service
+UNIT
+systemctl enable zynqmini-sshkeys.service || ln -sf /etc/systemd/system/zynqmini-sshkeys.service \
+    /etc/systemd/system/multi-user.target.wants/zynqmini-sshkeys.service
+[ -e /etc/systemd/system/multi-user.target.wants/zynqmini-sshkeys.service ] || { echo "ERROR: zynqmini-sshkeys not enabled" >&2; exit 1; }
+[ -z "$(ls /etc/ssh/ssh_host_*_key 2>/dev/null)" ] || { echo "ERROR: SSH host keys still present" >&2; exit 1; }
+
 # Fail the build loudly if the DHCP servers are still enabled.
 for svc in isc-dhcp-server isc-dhcp-server6; do
     if [ -e "/etc/systemd/system/multi-user.target.wants/$svc.service" ]; then
