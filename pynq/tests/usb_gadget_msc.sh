@@ -7,8 +7,10 @@
 #   sudo bash usb_gadget_msc.sh stop    unbind and remove the gadget
 #
 # Wiring: power the board from the UART or JTAG port, take any USB host adapter / drive out of the middle
-# Type-C port, and connect that port to the PC with an ordinary Type-C cable. The port switches to device mode
-# by itself (the cable's ID state), then run "start". The PC will offer to format the blank disk the first time.
+# Type-C port, and connect that port to the PC with an ordinary Type-C cable.
+#
+# The PC will offer to format the blank disk the first time.
+# When formatted, write any file under 32 MiB to the device to complete the test.
 set -u
 G=/sys/kernel/config/usb_gadget/zynqmini
 IMG=${GADGET_IMG:-/tmp/gadget.img}

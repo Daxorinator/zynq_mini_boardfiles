@@ -1,7 +1,8 @@
 #!/bin/bash
-# Check the second TF slot (SD1, MIO10-15, 3.3 V, not boot-capable). Run as root:  sudo bash sd1_test.sh
-# Put a FAT/ext4-formatted card in the SD1/TF2 slot first. The test writes one small file and deletes it;
-# it never formats or repartitions anything.  UNTESTED on hardware.
+# Check the second TF slot (SD1, MIO10-15, 3.3 V, not boot-capable). 
+# Put a FAT/ext4-formatted card in the SD1/TF2 slot for testing.
+#
+# Run as root: sudo bash sd1_test.sh
 set -u
 echo "== MMC devices (SD0 boot card is mmcblk0; SD1 should appear as mmcblk1) =="
 ls -l /dev/mmcblk* 2>&1

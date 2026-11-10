@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Test the PS-side LED (D6, MIO9, active high) and KEY1 (MIO0, active low) with PYNQ's GPIO class.
+"""
+Test the PS-side LED (D6, MIO9, active high) and KEY1 (MIO0, active low) with PYNQ's GPIO class.
 
-Run as root on the board:  sudo -i; python3 ps_gpio_test.py
-Needs no overlay: MIO pins are wired straight to the PS.  UNTESTED on hardware.
+Run as root on the board: python3 ps_gpio_test.py
 """
 import time
 from pynq import GPIO

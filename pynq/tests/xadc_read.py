@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""Read the Zynq XADC (die temperature and supply voltages) through the Linux IIO interface.
-Run on the board (root not required):  python3 xadc_read.py   UNTESTED on hardware.
+"""
+Read the Zynq XADC (die temperature and supply voltages) through the Linux IIO interface.
 Needs the xilinx-xadc driver (CONFIG_XILINX_XADC) and an XADC node in the device tree.
+
+Run on the board: python3 xadc_read.py
 """
 import glob, os
 

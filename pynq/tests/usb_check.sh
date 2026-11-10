@@ -1,9 +1,10 @@
 #!/bin/bash
-# Check the PS USB 2.0 port (USB3320 ULPI PHY on MIO28-39, PHY reset MIO46). This is the middle
-# Type-C connector. Run as root:  sudo bash usb_check.sh   UNTESTED on hardware.
+# Check the PS USB 2.0 port (USB3320 ULPI PHY on MIO28-39, PHY reset MIO46). This is the middle Type-C connector.
 #
-# Before running: plug a USB device (stick, keyboard, mouse) into the middle Type-C port using a
-# Type-C to USB-A adapter. Power the board from the UART or JTAG port, not the USB port.
+# Before running: plug a USB device (keyboard, mouse, etc.) into the middle Type-C port.
+# Power the board from the UART or JTAG port for the duration of the test.
+#
+# Run as root:  sudo bash usb_check.sh
 echo "== lsusb (the root hub should always show; your device only if the port works) =="
 lsusb 2>&1
 echo "== USB devices in sysfs =="
