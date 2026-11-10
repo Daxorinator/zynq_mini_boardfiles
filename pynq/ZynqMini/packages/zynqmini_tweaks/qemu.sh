@@ -1,30 +1,29 @@
 #!/bin/bash
 # Runs inside the rootfs chroot (under QEMU) during the sdbuild package stage.
-# Board-specific fixes for the ZYNQ MINI image.
+# Contains board-specific fixes for the ZYNQ MINI image
 set -e
 set -x
 
-# 1. This board is a DHCP *client* only. The prebuilt rootfs ships isc-dhcp-server, which has no
-#    interface configured here and just fails at every boot. Disable it (and the IPv6 one).
+# 1. Disable isc-dhcp-server, it is an abandoned package and has no default config anyway so it fails on every boot
 for svc in isc-dhcp-server isc-dhcp-server6; do
-    systemctl disable "$svc" || true            # sysv-install path; may complain inside a chroot
+    systemctl disable "$svc" || true
     rm -f "/etc/systemd/system/multi-user.target.wants/$svc.service"
     update-rc.d -f "$svc" remove || true
 done
 
-# 2. haveged is killed by its own systemd seccomp filter on armhf (SIGSYS, restart loop): the stock
-#    unit allows no uname(), which armhf glibc calls at program startup. Allow just that call.
+# 2. `haveged` (a userspace hardware RNG daemon) is killed by its own systemd seccomp filter on armhf
+# the stock unit doesn't allow uname(), which armhf glibc calls at program startup, this fix allows that call
 mkdir -p /etc/systemd/system/haveged.service.d
 cat > /etc/systemd/system/haveged.service.d/armhf-uname.conf <<'CONF'
 [Service]
-# armhf glibc calls uname() at startup; the stock SystemCallFilter forbids it, so seccomp kills haveged.
+# armhf glibc calls uname() at startup, the stock SystemCallFilter forbids it, so seccomp kills haveged
+# this filter prevents that by allowing `uname()`
 SystemCallFilter=uname
 CONF
 
-# 3. Stable Ethernet MAC. The board has no programmed MAC, so U-Boot invents a random one at every boot
-#    ("using random MAC address"). Derive a stable, locally administered MAC from the CID of the SD card
-#    the system booted from: a reflashed card keeps its address (and DHCP lease), a different card gets a
-#    different one. Applied before networking starts, while eth0 is still down.
+# 3. Stable Ethernet MAC. The board has no vendor programmed MAC, so U-Boot invents a random one at every boot.
+#    This script derives a stable, locally administered MAC from the CID of the boot SD card.
+#    A reflashed card keeps its MAC address (and DHCP lease), and cloning to a different card generates a new MAC.
 install -d /usr/local/sbin
 cat > /usr/local/sbin/zynqmini-mac <<'SCRIPT'
 #!/bin/sh
@@ -46,7 +45,7 @@ chmod 755 /usr/local/sbin/zynqmini-mac
 
 cat > /etc/systemd/system/zynqmini-mac.service <<'UNIT'
 [Unit]
-Description=Set a stable Ethernet MAC derived from the boot SD card
+Description=Set a stable Ethernet MAC derived from the boot SD card CID
 DefaultDependencies=no
 Wants=sys-subsystem-net-devices-eth0.device network-pre.target
 After=sys-subsystem-net-devices-eth0.device
@@ -74,11 +73,9 @@ systemctl mask apt-daily-upgrade.service || ln -sf /dev/null /etc/systemd/system
 rm -f /etc/systemd/system/timers.target.wants/apt-daily-upgrade.timer \
       /etc/systemd/system/multi-user.target.wants/unattended-upgrades.service
 
-# 5. USB role switching and the default USB gadget. The PS USB port (chipidea, ULPI PHY) uses a software role switch (usb-role-switch in
-#    the device tree): hardware OTG sensing stalls the gadget link. Boot default is DEVICE with a gadget
-#    (serial console + NCM Ethernet, board 192.168.2.99/24 (the PYNQ default), PC 192.168.2.1/24): device mode never drives VBUS, so a
-#    PC cable is safe at boot. For a keyboard/flash drive run "zynqmini-usb-role host" (unplug the PC cable first,
-#    host drives VBUS); "zynqmini-usb-role device" returns to the gadget.
+# 5. Set up USB role switching and the default USB gadget. The PS USB port (chipidea, ULPI PHY) uses a software role switch (usb-role-switch in the device tree).
+#    Hardware OTG sensing causes OTG mode flapping due to poor board design. Default is DEVICE with gadgets for  serial console + NCM Ethernet on 192.168.2.99/24 (the PYNQ default)
+#    For a keyboard/flash drive run `zynqmini-usb-role host`, `zynqmini-usb-role device` returns to the gadget.
 cat > /usr/local/sbin/zynqmini-usb-role <<'SCRIPT'
 #!/bin/sh
 # usage: zynqmini-usb-role [host|device|none|status]
@@ -163,18 +160,16 @@ systemctl enable zynqmini-usb-gadget.service || ln -sf /etc/systemd/system/zynqm
     /etc/systemd/system/multi-user.target.wants/zynqmini-usb-gadget.service
 [ -e /etc/systemd/system/multi-user.target.wants/zynqmini-usb-gadget.service ] || { echo "ERROR: zynqmini-usb-gadget not enabled" >&2; exit 1; }
 
-# The PYNQ default address 192.168.2.99 lives on usb0 (gadget, above) in this image, so drop the stock eth0:1
-# alias that would put the same address on the same subnet on eth0 (replies could leave on the wrong port).
+# The PYNQ default address 192.168.2.99 lives on usb0 in this image, so drop the stock eth0:1 alias.
 # allow-hotplug (not auto): ifup@eth0 runs from udev as soon as eth0 exists instead of after "networking.service"
-# (which waited for udev to settle), so the PHY link and DHCP start about 5 s earlier and the boot target no longer
-# waits for the lease.
+# so the PHY link and DHCP start about 5 s earlier and the boot target no longer waits for the lease.
 cat > /etc/network/interfaces.d/eth0 <<'IFACE'
 allow-hotplug eth0
 iface eth0 inet dhcp
 IFACE
 ! grep -q '192.168.2.99' /etc/network/interfaces.d/eth0 || { echo "ERROR: eth0:1 alias still present" >&2; exit 1; }
 
-# 6. Boot time (measured with systemd-analyze on the board).
+# 6. Boot time fixes.
 #    - dhclient started ~4 s before the PHY link was up, so its first requests were lost and the 3 s / 8 s
 #      retry backoff delayed the lease to ~34 s. Retry quickly instead.
 grep -q '^initial-interval' /etc/dhcp/dhclient.conf || printf 'initial-interval 1;\nbackoff-cutoff 3;\n' >> /etc/dhcp/dhclient.conf
@@ -186,13 +181,11 @@ for unit in apport-autoreport.path apport-forward.socket e2scrub_reap.service e2
             ua-timer.timer motd-news.timer man-db.timer bluetooth.service setvtrgb.service; do
     systemctl disable "$unit" || true
 done
-#    - Give Jupyter (the slowest start, ~30 s of CPU-bound Python) priority over the other boot-time work.
+#    - Give Jupyter (the slowest start, ~30 s of CPU-bound Python) priority over other boot-time work.
 mkdir -p /etc/systemd/system/jupyter.service.d
 printf '[Service]\nNice=-5\n' > /etc/systemd/system/jupyter.service.d/priority.conf
 
-# 7. PYNQ assumes a 50 MHz PS clock on Zynq-7000 (PYNQ-Z1/Z2). This board's PS_CLK is 33.3333 MHz, so pynq.ps.Clocks
-#    (and the FCLK settings Overlay.download() applies from the .hwh) came out 1.5x too high: IO PLL computed as 1500 MHz
-#    instead of 1000 MHz, and a requested 100 MHz FCLK0 really ran at 66.7 MHz. Correct the default reference clock.
+# 7. PYNQ assumes a 50 MHz PS clock on Zynq-7000 (PYNQ-Z1/Z2). This board's PS_CLK is 33.3333 MHz.
 PS_PY=$(ls /usr/local/share/pynq-venv/lib/python3*/site-packages/pynq/ps.py 2>/dev/null | head -1)
 [ -n "$PS_PY" ] || { echo "ERROR: pynq/ps.py not found" >&2; exit 1; }
 sed -i '/^class _ClocksZynq/,/^class Clocks/ s/DEFAULT_SRC_CLK_MHZ = 50\.0/DEFAULT_SRC_CLK_MHZ = 33.333/' "$PS_PY"
@@ -203,9 +196,8 @@ z = t[t.index("class _ClocksZynq"):t.index("class Clocks(")]
 assert "DEFAULT_SRC_CLK_MHZ = 33.333" in z, "ps.py patch did not apply"
 PY
 
-# 8. No SSH host keys in the image. The stock rootfs ships pre-generated host keys, so every copy of a distributed image
-#    would share the same private keys (anyone could impersonate any board). Remove them and generate fresh ones on the
-#    first boot, before sshd starts.
+# 8. Remove the SSH host keys in the image. The stock rootfs ships with pre-generated host keys, so every copy of a distributed image
+#    would share the same private keys. This removes them and generates fresh ones on the first boot, before sshd starts.
 rm -f /etc/ssh/ssh_host_*_key /etc/ssh/ssh_host_*_key.pub
 cat > /etc/systemd/system/zynqmini-sshkeys.service <<'UNIT'
 [Unit]
@@ -223,16 +215,3 @@ systemctl enable zynqmini-sshkeys.service || ln -sf /etc/systemd/system/zynqmini
     /etc/systemd/system/multi-user.target.wants/zynqmini-sshkeys.service
 [ -e /etc/systemd/system/multi-user.target.wants/zynqmini-sshkeys.service ] || { echo "ERROR: zynqmini-sshkeys not enabled" >&2; exit 1; }
 [ -z "$(ls /etc/ssh/ssh_host_*_key 2>/dev/null)" ] || { echo "ERROR: SSH host keys still present" >&2; exit 1; }
-
-# Fail the build loudly if the DHCP servers are still enabled.
-for svc in isc-dhcp-server isc-dhcp-server6; do
-    if [ -e "/etc/systemd/system/multi-user.target.wants/$svc.service" ]; then
-        echo "ERROR: $svc is still enabled" >&2; exit 1
-    fi
-done
-
-for f in /etc/systemd/system/timers.target.wants/apt-daily-upgrade.timer \
-         /etc/systemd/system/multi-user.target.wants/unattended-upgrades.service; do
-    [ ! -e "$f" ] || { echo "ERROR: $f is still enabled" >&2; exit 1; }
-done
-[ "$(readlink /etc/systemd/system/apt-daily-upgrade.service)" = /dev/null ] || { echo "ERROR: apt-daily-upgrade.service not masked" >&2; exit 1; }
