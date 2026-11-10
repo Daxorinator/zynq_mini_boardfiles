@@ -3,9 +3,14 @@
 @@ -124,7 +124,7 @@
          else:
              proot = plnx_utils.exit_not_plnx_project(proot='')
- 
--    args.builddir = plnx_vars.BuildDir.format(proot)
-+    args.builddir = plnx_vars.BuildDir.format(proot if proot else (os.path.realpath((args.project[0] if isinstance(args.project, list) else args.project)) if getattr(args, 'project', None) else '/tmp'))
++    else:
++        # Exit if PROOT is not PetaLinux project
++        if args.project:
++            proot = plnx_utils.exit_not_plnx_project(args.project[0])
++        else:
++            proot = plnx_utils.exit_not_plnx_project(proot='')
+
+     args.builddir = plnx_vars.BuildDir.format(proot)
      plnx_utils.CreateDir(args.builddir)
      args.command = os.path.basename(sys.argv[0])
      args.logfile = plnx_vars.PkgFileName
