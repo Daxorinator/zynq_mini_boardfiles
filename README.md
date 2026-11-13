@@ -43,8 +43,14 @@ Not modelled as board interfaces, because Vivado has no standard interface type 
 
 Pin assignments for these devices are in the docs. All except the PL Ethernet RGMII pins have been tested in XDC (see Status).
 
+## Releases
+
+The [latest release](../../releases/latest) has two downloads, with SHA-256 checksums in `SHA256SUMS`:
+- `zynq_mini_boardfiles.zip`: the Vivado board files. Install as described under [Installing](#installing).
+- `ZynqMini-3.1.2.img.zip`: a ready-to-flash PYNQ SD card image. Flash and boot it as described in [`pynq/BUILDING.md`](pynq/BUILDING.md#flash-and-boot), or build it yourself from [`pynq/`](pynq/).
+
 ## Installing
-0. Download the repo
+0. Download the repo, or unzip `zynq_mini_boardfiles.zip` from the release
 1. Copy the board files:
   - Copy the `zynq_mini` folder from the root of the project into `<Vivado>/data/boards/board_files/`
   - Restart Vivado.
