@@ -20,7 +20,7 @@ Board specs:
 - 128 Mbit QSPI flash
 - 2x TF card slots (SD0 can boot)
 - 2x RTL8211E Gigabit Ethernet ports (PS + PL)
-- Three Type-C connectors: USB 2.0 Host via USB3320 ULPI (USB Port), CH340 USB-UART (UART Port), FT232H JTAG (JTAG Port)
+- Three Type-C connectors: USB 2.0 Host/Device via USB3320 ULPI (USB Port), CH340 USB-UART (UART Port), FT232H JTAG (JTAG Port)
 - HDMI Out
 - 0.96" OLED via SPI + AT24C02 EEPROM via I2C
 - 40-pin GPIO header with 34 IO pins
@@ -31,7 +31,7 @@ Board specs:
 |---|---|
 | `ps7_fixedio` (preset) | 33.333 MHz PS crystal, 16-bit DDR3 @ 533 MHz, QSPI, ETH0 RGMII, USB0 ULPI, SD0 + SD1, UART1; MIO GPIO |
 | `sys_clock` | 50 MHz PL Oscillator |
-| `leds_4bits` | Four PL LEDs |
+| `leds_4bits` | Four PL LEDs (LED1–LED4, silkscreened D2–D5) |
 | `push_buttons_2bits` | Two PL keys |
 
 Not modelled as board interfaces, because Vivado has no standard interface type for them:
@@ -41,7 +41,7 @@ Not modelled as board interfaces, because Vivado has no standard interface type 
 - EEPROM
 - PL-side Ethernet RGMII
 
-Pin assignments for these devices are in the docs and have been tested in XDC.
+Pin assignments for these devices are in the docs. All except the PL Ethernet RGMII pins have been tested in XDC (see Status).
 
 ## Installing
 0. Download the repo
@@ -71,28 +71,40 @@ Everything was derived from the vendor's package for the board:
 The vendor package for the board was sourced from a seller on AliExpress who provided a Baidu link, with the files kindly downloaded from Baidu in China by [@p0nch00](https://github.com/p0nch00)
 
 ## Status
-Verified:
+
+Board files and PL hardware.
+
+Verified in Vivado and Vitis:
 - Loads in Vivado 2024.1
-- The board appears in the project wizard, the PS7 preset and the LED/button interfaces can be used in a block design, which validates OK, implementation and bitstream both OK
-- A Vitis 2024.1 application utilising the bitstream from Vivado builds and connects over JTAG OK
+- The board appears in the project wizard, the PS7 preset and the LED/button interfaces can be used in a block design - validation OK, implementation OK, bitstream OK
+- A Vitis 2024.1 application utilising the bitstream from Vivado builds and flashes over JTAG OK
 
-Verified on hardware (via the PYNQ build in [`pynq/`](pynq/)):
-- PS preset: 512 MB DDR3, SD0 boot, PS Ethernet at 1 Gb/s, UART1 console
+Verified on hardware (PL side; the test designs are in [`pynq/overlay`](pynq/overlay/), run from the PYNQ image below):
 - PL LEDs and keys through AXI GPIO blocks on the `leds_4bits` / `push_buttons_2bits` interfaces
-- SD1 (hot-plug), QSPI flash as MTD (W25Q128, 3 partitions), PS LED/KEY1 GPIO, XADC, USB host (full-speed keyboard, high-speed flash drive)
-- USB device mode: mass storage, and serial plus Ethernet (CDC ACM + NCM) to a Windows 11 PC
-- PL: clocks (50 MHz oscillator and MMCM), 34-pin expansion header, timer interrupt, AXI DMA, AT24C02 EEPROM, SSD1306 OLED, HDMI 640x480 colour bars, PL Ethernet PHY over MDIO (tests in [`pynq/overlay/pltest`](pynq/overlay/pltest/))
+- Clocks (50 MHz oscillator and MMCM), 34-pin expansion header, timer interrupt, AXI DMA
+- AT24C02 EEPROM, SSD1306 OLED, HDMI 640x480 colour bars
+- PL Ethernet PHY over MDIO (tests in [`pynq/overlay/pltest`](pynq/overlay/pltest/))
 
-Not Verified:
+Not verified:
 - Behaviour on other Vivado versions
-- The PL Ethernet data path (the RGMII path is not built and has not been run with a cable)
-- Issues and pull requests are welcome, especially from anyone with a different board revision.
+- The PL Ethernet data path
+
+Issues and pull requests are welcome, especially from anyone with a different board revision.
 
 ## PYNQ
 
-[`pynq/`](pynq/) has everything needed to build a PYNQ v3.1.2 SD card image for this board (Vivado, Vitis and
-PetaLinux 2024.1): the `sdbuild` board spec, the Vivado Tcl, an LED/key overlay, a PetaLinux patch, a build script and
-peripheral test scripts. See [`pynq/BUILDING.md`](pynq/BUILDING.md). No prebuilt image is published yet.
+[PYNQ](https://www.pynq.io) is an open-source framework from AMD that runs Linux and Jupyter Notebook on Zynq boards via the ARM processor. It lets you load a bitstream (an "overlay") and control the PL from Python, so you can drive LEDs, DMA engines and custom IP from a notebook in your browser without writing C drivers or a bare-metal application.
+
+[`pynq/`](pynq/) has everything needed to build a PYNQ v3.1.2 SD card image for this board (Vivado, Vitis and PetaLinux 2024.1): the `sdbuild` board spec, the Vivado Tcl, an LED/key overlay, a PetaLinux patch, a build script and peripheral test scripts.
+See [`pynq/BUILDING.md`](pynq/BUILDING.md).
+
+### PYNQ image status
+
+Verified on hardware, running the PYNQ image (PS side and Linux; test scripts in [`pynq/tests`](pynq/tests/)):
+- PS preset: 512 MB DDR3, SD0 boot, PS Ethernet at 1 Gb/s, UART1 console
+- SD1 (hot-plug), QSPI flash as MTD (W25Q128, 3 partitions), PS LED/KEY1 GPIO, XADC
+- USB host (full-speed keyboard, high-speed flash drive)
+- USB device mode: mass storage, and serial plus Ethernet (CDC ACM + NCM) to a Windows 11 PC
 
 ## License
 

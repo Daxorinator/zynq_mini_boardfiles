@@ -1,20 +1,18 @@
 #!/bin/bash
-# Build helper for the ZYNQ MINI PYNQ image. See BUILDING.md for one-time host setup.
+# Build helper for the ZYNQ MINI PYNQ image.
 #
-#   ./build.sh xsa       PS-only design -> XSA, base.bit, base.hwh   (Vivado)
-#   ./build.sh overlay   LED + key overlay -> overlay/out/*          (Vivado)
-#   ./build.sh pltest    PL self-test overlay -> overlay/out/pltest.*  (Vivado, ~10 min)
-#   ./build.sh hdmi      HDMI test-pattern overlay -> overlay/out/hdmi_test.*  (Vivado, build-only)
-#   ./build.sh image     PYNQ sdbuild -> $PYNQ_DIR/sdbuild/output/   (needs sudo, ~10-30 min with prebuilt rootfs)
-#   ./build.sh image --force-rootfs   redo the rootfs stage (use after changing ZynqMini.spec or
-#                                     packages/: make does not notice)
-#   ./build.sh image --force-boot     re-create the PetaLinux project and boot files, then the rootfs
-#                                     (use after changing meta-user/ device tree files)
-#
-# Override locations with environment variables:
-#   VIVADO_DIR  VITIS_DIR  PETALINUX_DIR  PYNQ_DIR  (defaults below)
+#   ./build.sh xsa                    PS-only design -> XSA, base.bit, base.hwh (Vivado)
+#   ./build.sh overlay                LED + key overlay -> overlay/out/* (Vivado)
+#   ./build.sh pltest                 PL self-test overlay -> overlay/out/pltest.* (Vivado)
+#   ./build.sh hdmi                   HDMI test-pattern overlay -> overlay/out/hdmi_test.* (Vivado)
+#   ./build.sh image                  PYNQ sdbuild -> $PYNQ_DIR/sdbuild/output/ (needs sudo, ~10-30 min with prebuilt rootfs)
+#   ./build.sh image --force-rootfs   forcibly rerun the rootfs stage (use after changing ZynqMini.spec or packages/)
+#   ./build.sh image --force-boot     forcibly re-create the PetaLinux project and boot files, then the rootfs (use after changing meta-user / device tree files)
 set -euo pipefail
 
+# these can be overriden using environment variables or by changing below
+# it just assumes a standard Vitis + PetaLinux install in ~/Xilinx/
+# and also assumes you're working out of ~/zynq_mini_boardfiles/pynq or similar
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(dirname "$HERE")"
 VIVADO_DIR="${VIVADO_DIR:-$HOME/Xilinx/Vivado/2024.1}"
@@ -22,8 +20,7 @@ VITIS_DIR="${VITIS_DIR:-$HOME/Xilinx/Vitis/2024.1}"
 PETALINUX_DIR="${PETALINUX_DIR:-$HOME/petalinux-2024.1}"
 PYNQ_DIR="${PYNQ_DIR:-$HOME/PYNQ}"
 
-# QEMU 5.2.0 and crosstool-ng (from sdbuild/scripts/setup_host.sh) must beat /usr/bin,
-# which has a newer QEMU that fails sdbuild's version check.
+# QEMU 5.2.0 and crosstool-ng (from sdbuild/scripts/setup_host.sh) must be on path before /usr/bin, which on many systems contains a newer QEMU install that fails sdbuild's version check
 export PATH=/opt/qemu/bin:/opt/crosstool-ng/bin:$PATH
 
 case "${1:-}" in
@@ -62,7 +59,7 @@ case "${1:-}" in
     for opt in "${OPTS[@]}"; do
       case "$opt" in
         --force-rootfs) rm -f "$PYNQ_DIR/sdbuild/build/ZynqMini.tar.gz" ;;
-        --force-boot)   # re-create the PetaLinux project so meta-user/system-user.dtsi is picked up
+        --force-boot)   # re-create the PetaLinux project so meta-user is picked up
                         rm -rf "$PYNQ_DIR/sdbuild/build/ZynqMini" "$PYNQ_DIR/sdbuild/output/boot/ZynqMini"
                         rm -f  "$PYNQ_DIR/sdbuild/build/ZynqMini.tar.gz" ;;
         *) echo "unknown option $opt"; exit 1 ;;
