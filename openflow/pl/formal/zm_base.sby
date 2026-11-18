@@ -1,0 +1,27 @@
+[tasks]
+bmc
+
+[options]
+bmc: mode bmc
+bmc: depth 120
+multiclock on
+
+[engines]
+smtbmc boolector
+
+[script]
+read_verilog -formal -sv formal_ps7.v
+read_verilog -formal zm_base.v
+read_verilog -formal formal_zm_base.v
+read_verilog -formal models_formal_bufg.v
+read_verilog -formal models_formal_mmcm.v
+prep -flatten -top formal_zm_base
+splitnets
+opt_clean
+
+[files]
+formal_ps7.v
+../zm_base/zm_base.v
+formal_zm_base.v
+../sim/models_formal_bufg.v
+models_formal_mmcm.v

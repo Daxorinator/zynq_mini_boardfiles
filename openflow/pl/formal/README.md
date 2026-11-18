@@ -8,3 +8,6 @@ Status 2026-11-18: the first run found two real bugs: (1) an unaligned SRC/DST m
 traffic; `mode` is latched at start). The proof now passes (bounded model check, 140 steps), `sby -f hp_dma.sby cover` reaches a finished run and an error, the simulations cover the
 rejection (`../sim`), and the rebuilt bitstreams pass the hardware tests (`../../py/tests`, incl. rejection of misaligned runs).
 The proof is bounded (not an unbounded induction proof) and covers the DMA engine through the HP0 and LED ports only, with a free CPU on GP0.
+
+`sby -f zm_base.sby bmc` runs the same AXI/HP0 rules on `zm_base` (the DMA engine plus the register file, header, timer and clock-meter logic, with the MMCM replaced by free outputs):
+passes for 120 steps (about 5 minutes). Not covered: the PL Ethernet MAC front end (`ple_mac`), which has only the offline protocol test and the hardware test.
