@@ -1,7 +1,7 @@
 // PS+PL cooperation test: a PL block that copies (or just checksums) a buffer in DDR through the PS's AXI3 high-performance
 // port HP0 (64-bit master), configured from Linux over M_AXI_GP0 (0x40000000), completion flagged in a status register
 // and on IRQ_F2P[0].
-//   0x00 ID ("HPD1")      0x04 scratch        0x08 SRC (physical)   0x0C DST (physical)   0x10 LEN in bytes (multiple of 128)
+//   0x00 ID ("HPD1")      0x04 scratch        0x08 SRC (physical)   0x0C DST (physical)   0x10 LEN in bytes (multiple of 128; SRC and, for a copy, DST must be 128-byte aligned too, otherwise the run is rejected with the error flag and no bus traffic)
 //   0x14 CTRL  W: bit0 start, bit1 mode (0 copy, 1 checksum only), bit2 clear done/irq, bit3 irq enable      R: {mode, irq_en}
 //   0x18 STATUS bit0 busy, bit1 done, bit2 error (bad AXI response)
 //   0x1C CHECKSUM (sum of all 32-bit words read)   0x20 CYCLES of the last run   0x24 BYTES done
@@ -56,8 +56,11 @@ module hp_dma(input clk50, input [1:0] key, output [3:0] led);
     if (clr) begin done <= 0; err <= 0; end
     case (st)
       IDLE: if (start) begin
-              busy <= 1; done <= 0; err <= 0; rem <= len; sa <= src; da <= dst; csum <= 0; cycles <= 0; bytes_done <= 0;
-              st <= (len == 0) ? NEXT : AR;
+              if (src[6:0] != 0 || len[6:0] != 0 || (!mode && dst[6:0] != 0)) begin done <= 1; err <= 1; end     // misaligned: bursts would cross 4 KiB boundaries, reject
+              else begin
+                busy <= 1; done <= 0; err <= 0; rem <= len; sa <= src; da <= dst; csum <= 0; cycles <= 0; bytes_done <= 0;
+                st <= (len == 0) ? NEXT : AR;
+              end
             end
       AR:  begin hp_araddr <= sa; hp_arvalid <= 1; if (hp_arvalid && hp_arready) begin hp_arvalid <= 0; hp_rready <= 1; beat <= 0; st <= RD; end end
       RD:  begin

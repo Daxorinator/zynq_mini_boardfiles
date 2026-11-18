@@ -98,7 +98,10 @@ module zm_base(input clk50, input [1:0] key, output [3:0] led,
   always @(posedge aclk) begin
     if (clr) begin done <= 0; err <= 0; end
     case (st)
-      IDLE: if (start) begin busy <= 1; done <= 0; err <= 0; rem <= len; sa <= src; da <= dst; csum <= 0; cycles <= 0; bytes_done <= 0; st <= (len == 0) ? NEXT : AR; end
+      IDLE: if (start) begin
+              if (src[6:0] != 0 || len[6:0] != 0 || (!mode && dst[6:0] != 0)) begin done <= 1; err <= 1; end     // misaligned: bursts would cross 4 KiB boundaries, reject
+              else begin busy <= 1; done <= 0; err <= 0; rem <= len; sa <= src; da <= dst; csum <= 0; cycles <= 0; bytes_done <= 0; st <= (len == 0) ? NEXT : AR; end
+            end
       AR:  begin hp_araddr <= sa; hp_arvalid <= 1; if (hp_arvalid && hp_arready) begin hp_arvalid <= 0; hp_rready <= 1; beat <= 0; st <= RD; end end
       RD:  if (hp_rvalid && hp_rready) begin
              buffer[beat[3:0]] <= hp_rdata; beat <= beat + 1; csum <= csum + hp_rdata[31:0] + hp_rdata[63:32];

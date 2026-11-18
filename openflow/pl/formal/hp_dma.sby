@@ -1,0 +1,28 @@
+[tasks]
+bmc
+cover
+
+[options]
+bmc: mode bmc
+bmc: depth 140
+cover: mode cover
+cover: depth 180
+multiclock on
+
+[engines]
+smtbmc boolector
+
+[script]
+read_verilog -formal -sv formal_ps7.v
+read_verilog -formal hp_dma.v
+read_verilog -formal formal_hp_dma.v
+read_verilog -formal models_formal_bufg.v
+prep -flatten -top formal_hp_dma
+splitnets
+opt_clean
+
+[files]
+formal_ps7.v
+formal_hp_dma.v
+../hp_dma/hp_dma.v
+../sim/models_formal_bufg.v
