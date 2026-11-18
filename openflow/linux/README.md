@@ -26,3 +26,9 @@ The boot partition was also read back by U-Boot's own FAT driver (the sandbox bu
 `system.dtb` in the FAT and falls through harmlessly; U-Boot uses a random MAC (the PYNQ image's fixed one is not part of this boot chain), so the board's DHCP address changes
 after switching to this card.
 Not carried over from PYNQ: the Xilinx `zocl` (XRT) and `xlnk` drivers, so PYNQ's own Python library does not work on this kernel; use `../py/zynqmini`.
+
+## Feature check of the open kernel against the PYNQ (vendor) kernel (2026-11-18, same board)
+Working on the open kernel (boot from SD or QSPI): SD slot 2 (card detected and mounted), QSPI flash as MTD (3 partitions, read and written), XADC (iio device: die temperature
+about 54 C, supply voltages), UART console, PS Ethernet (1 Gb/s, DHCP), PL via the FPGA manager and UIO interrupts, DMA buffers (`zmbuf`), I2C EEPROM, the open PL designs.
+Configured but not exercised with a host here: USB device mode (the NCM/ACM gadget comes up and the UDC reports `suspended` with no host connected) and USB host (keyboard, flash drive).
+Not available: the Xilinx `zocl`/`xlnk` drivers and with them the PYNQ Python library.
