@@ -13,7 +13,7 @@ exec "$GDB" -batch -nx ${VMLINUX:+"$VMLINUX"} \
   -ex "target extended-remote $HOSTPORT" \
   -ex "echo \n--- JTAG chain / targets ---\n" -ex "monitor targets" \
   -ex "echo \n--- non-intrusive reads (CPUs keep running) ---\n" \
-  -ex "monitor peek 0xf8000258" -ex "monitor peek 0xf800025c" -ex "monitor peek 0xf8000100" -ex "monitor peek 0xf8007080" \
+  -ex "monitor zynq.ahb mdw 0xf8000258" -ex "monitor zynq.ahb mdw 0xf800025c" -ex "monitor zynq.ahb mdw 0xf8000100" -ex "monitor zynq.ahb mdw 0xf8007080" \
   -ex "echo \n--- halt CPU 0, look around, resume ---\n" \
   -ex "monitor halt" -ex "info registers pc sp lr cpsr" -ex "x/6i \$pc" ${VMLINUX:+-ex "bt 6"} \
   -ex "monitor resume" -ex "detach"

@@ -18,6 +18,7 @@ Kernel, device tree and boot files built from source with no Vivado, PetaLinux o
 Verified: the kernel and device tree boot on the board (`Linux 6.6.0-zynqmini-open`, started with U-Boot's `bootz` from a self-deleting `uEnv.txt`),
 `/dev/dma_heap`, `/dev/uio0` and `zmbuf` work and the PL DMA tests pass on it (`../py/tests`). `build.sh` was run from a clean checkout and gives the
 same `zImage` size and a byte-identical device tree. `mkimage.py` output was checked offline: partition table, `fsck.fat` clean, file contents equal
-to their sources, `e2fsck` clean, new modules present. NOT yet verified: booting an SD card written from that image, and the generated boot script
-(a first attempt to run it as a one-shot hung because the test loaded it over the memory the running script was executing from).
+to their sources, `e2fsck` clean, new modules present. The generated boot script was verified on the board as a one-shot `uEnv.txt` (loads `zmboot.scr` from the FAT partition, which loads `zimage` and
+`zynqmini.dtb` and runs `bootz`): the board came up on `6.6.0-zynqmini-open` with `/dev/zmbuf` created by the `modules-load.d` entry. NOT verified: powering up from an
+SD card actually written with `mkimage.py` (the assembled image was only checked offline). Load the one-shot script away from the running script's own memory (`0x04000000`).
 Not carried over from PYNQ: the Xilinx `zocl` (XRT) and `xlnk` drivers, so PYNQ's own Python library does not work on this kernel; use `../py/zynqmini`.
