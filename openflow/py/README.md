@@ -12,3 +12,6 @@ Tests (`python3 tests/<name>.py <bitstream.bin>`):
   PASS, all eight on the board (2026-11-18): including the header test (34 pins drive high and low, no coupling; the inputs idle through weak pull-ups, so the test waits 20 ms per
   step) and the OLED (needs a look: the pattern shows with the 0.35 s reset and settling the display wants; 10 ms was not enough). The header test drives the 34 header pins so it
   is opt-in (`--header`, unplug everything first).
+
+Note: Linux keeps the SLCR unlocked at run time (its restart handler writes the reset register without unlocking). `set_fclk` therefore restores the previous lock state instead of always locking;
+an earlier version re-locked it, which made `reboot` end with "Reboot failed -- System halted" until the next JTAG reset (fixed and checked 2026-11-18: after FCLK changes, `reboot` restarts the board).
