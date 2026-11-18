@@ -19,6 +19,8 @@ Verified: the kernel and device tree boot on the board (`Linux 6.6.0-zynqmini-op
 `/dev/dma_heap`, `/dev/uio0` and `zmbuf` work and the PL DMA tests pass on it (`../py/tests`). `build.sh` was run from a clean checkout and gives the
 same `zImage` size and a byte-identical device tree. `mkimage.py` output was checked offline: partition table, `fsck.fat` clean, file contents equal
 to their sources, `e2fsck` clean, new modules present. The generated boot script was verified on the board as a one-shot `uEnv.txt` (loads `zmboot.scr` from the FAT partition, which loads `zimage` and
-`zynqmini.dtb` and runs `bootz`): the board came up on `6.6.0-zynqmini-open` with `/dev/zmbuf` created by the `modules-load.d` entry. NOT verified: powering up from an
-SD card actually written with `mkimage.py` (the assembled image was only checked offline). Load the one-shot script away from the running script's own memory (`0x04000000`).
+`zynqmini.dtb` and runs `bootz`): the board came up on `6.6.0-zynqmini-open` with `/dev/zmbuf` created by the `modules-load.d` entry. The boot partition written by `mkimage.py` was also read back by U-Boot's own FAT driver (the U-Boot sandbox build, `host bind` + `fatls`/`fatload`/`md5sum`
+from the same source tree as the board's U-Boot): all five files list and every checksum matches its source; the board's Linux also loop-mounts it and reads the same bytes.
+NOT verified: powering up from a physical SD card written with `mkimage.py` (the boot ROM reading `BOOT.BIN` from it; needs a spare card swapped in, the board's second slot holds
+a card with other data, which this work did not touch). Load the one-shot script away from the running script's own memory (`0x04000000`).
 Not carried over from PYNQ: the Xilinx `zocl` (XRT) and `xlnk` drivers, so PYNQ's own Python library does not work on this kernel; use `../py/zynqmini`.
