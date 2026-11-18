@@ -112,9 +112,13 @@ Verified on hardware, running the PYNQ image (PS side and Linux; test scripts in
 - USB host (full-speed keyboard, high-speed flash drive)
 - USB device mode: mass storage, and serial plus Ethernet (CDC ACM + NCM) to a Windows 11 PC
 
+## Open-source flow
+
+[`openflow/`](openflow/) runs the board on open-source tools instead of Vivado: PL designs built with Yosys and nextpnr-xilinx (LEDs, keys, OLED, I2C EEPROM, PS-to-PL AXI, HDMI up to 1280x720, PL Ethernet), and a boot chain from the first stage up (a hand-written PS7 init and a U-Boot SPL that boots the PYNQ image). See [`openflow/README.md`](openflow/README.md).
+
 ## License
 
-The board files and tooling are released under the [MIT License](LICENSE).
+The board files and tooling are released under the [MIT License](LICENSE). Exceptions inside `openflow/`: the U-Boot-derived overlay and the Xilinx-generated `ps7_init_gpl.c` reference are GPL-2.0-or-later (see `openflow/README.md`).
 
 `docs/` is an unofficial translation of the vendor's documentation and includes figures cropped from their schematics. The original material remains the property of its authors (Bochen Jingxin / Little Panda Academy); it is included for reference and will be removed on request.
 
