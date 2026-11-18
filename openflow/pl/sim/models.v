@@ -2,6 +2,18 @@
 // Simulation models for the Xilinx primitives the open-flow designs instantiate (not synthesised; only for iverilog/Verilator-style simulation).
 module BUFG(input I, output O); assign O = I; endmodule
 module IBUF(input I, output O); assign O = I; endmodule
+// DDR output: D1 is driven on the rising clock edge, D2 on the falling edge (SAME_EDGE: both registered at the rising edge)
+module ODDR #(parameter DDR_CLK_EDGE = "SAME_EDGE", parameter INIT = 1'b0, parameter SRTYPE = "SYNC") (output reg Q, input C, input CE, input D1, input D2, input R, input S);
+  reg d2_q = 0; initial Q = 0;
+  always @(posedge C) begin Q <= D1; d2_q <= D2; end
+  always @(negedge C) Q <= d2_q;
+endmodule
+// DDR input, SAME_EDGE_PIPELINED: the sample taken on the rising edge (Q1) and the one taken on the following falling edge (Q2) appear together at the next rising edge
+module IDDR #(parameter DDR_CLK_EDGE = "SAME_EDGE_PIPELINED", parameter INIT_Q1 = 1'b0, parameter INIT_Q2 = 1'b0, parameter SRTYPE = "SYNC") (output reg Q1, output reg Q2, input C, input CE, input D, input R, input S);
+  reg r = 0, f = 0; initial begin Q1 = 0; Q2 = 0; end
+  always @(posedge C) begin Q1 <= r; Q2 <= f; r <= D; end
+  always @(negedge C) f <= D;
+endmodule
 
 // Behavioural MMCME2_BASE: free-running output clocks from the VCO arithmetic (CLKIN period only used for the VCO rate), LOCKED after 100 input cycles.
 module MMCME2_BASE #(parameter real CLKIN1_PERIOD = 10.0, parameter real CLKFBOUT_MULT_F = 5.0, parameter integer DIVCLK_DIVIDE = 1,

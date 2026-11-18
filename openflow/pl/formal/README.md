@@ -10,4 +10,4 @@ rejection (`../sim`), and the rebuilt bitstreams pass the hardware tests (`../..
 The proof is bounded (not an unbounded induction proof) and covers the DMA engine through the HP0 and LED ports only, with a free CPU on GP0.
 
 `sby -f zm_base.sby bmc` runs the same AXI/HP0 rules on `zm_base` (the DMA engine plus the register file, header, timer and clock-meter logic, with the MMCM replaced by free outputs):
-passes for 120 steps (about 5 minutes). Not covered: the PL Ethernet MAC front end (`ple_mac`), which has only the offline protocol test and the hardware test.
+passes for 120 steps (about 5 minutes). The PL Ethernet MAC front end (`ple_mac`) has no formal proof (it is mostly clock-domain crossings and DDR primitives); it is covered by the simulation `../sim/tb_ple_mac.v` (TX frame format and gap, RX capture, missed frames, truncation, counters; mutation-checked), the offline protocol test and the hardware tests.
