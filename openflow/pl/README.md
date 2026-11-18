@@ -12,7 +12,7 @@ Every design instantiates `PS7` (required, see ../README.md) and uses the 50 MHz
 | `hp_dma` | **PS and PL together**: the PL copies/checksums buffers in DDR through the PS's AXI high-performance port HP0, controlled over GP0, completion by status register and by interrupt (IRQ_F2P[0] via the stock UIO node) | `hp_dma_test.py`: copies from 128 B to 8 MiB identical, checksums match, interrupt wakes a sleeping process |
 | `ple_mdio` | PL Ethernet PHY (RTL8211E) over MDIO bit-banged from the PS | PHY id read, link status |
 | `ple_rgmii` | RGMII TX/RX through the PHY's digital loopback | `rgmii_run.py`: 60/60 bytes, repeated loads |
-| `ple_mac` | **PL Ethernet over a real cable**: RGMII MAC front end in the PL (preamble/SFD/gap, raw frame capture), protocol in software on the PS (ARP, ICMP echo, UDP echo, FCS) | `ple_net.py selftest`: link 1000 Mb/s full duplex, ARP request answered by the peer with a valid FCS |
+| `ple_mac` | **PL Ethernet over a real cable**: RGMII MAC front end in the PL (preamble/SFD/gap, raw frame capture), protocol in software on the PS (ARP, ICMP echo, UDP echo, FCS) | `ple_net.py selftest`: link 1000 Mb/s full duplex, ARP request answered by the peer with a valid FCS. `ple_net.py serve`: the laptop's ARP, `ping -n 6` and a UDP echo to 10.0.0.2 were all answered by the FPGA (board counters: arp_replies=1 icmp_replies=6 udp_echo=1). `test_protocol.py`: offline check of the protocol code |
 
 Notes on the Ethernet parts:
 - The RX path samples RGMII on the inverted RXC and TX uses a 125 MHz clock in phase with the data: this PHY adds its own TX delay and does not delay RXC. This is fixed at 1000 Mb/s (the TX clock does not change), so the PHY is told to advertise 1000BASE-T only (`mdio.py`).

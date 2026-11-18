@@ -12,7 +12,7 @@ and the tests. The Vivado board files in `../zynq_mini/` and the PYNQ image in `
 Status (tested on REV B, XC7Z010-1CLG400, 2026-11):
 - PL: LEDs, keys, OLED, I2C EEPROM, PS-to-PL AXI, HDMI at 640x480 and 1280x720 (checked with a USB capture card).
 - PS and PL together: a PL DMA block moving data to and from DDR through the PS's AXI high-performance port, controlled from Linux, with an interrupt that wakes a sleeping process (`pl/hp_dma`).
-- PL Ethernet over a real cable at 1000 Mb/s: MAC front end in the PL, protocol stack in software on the PS (`pl/ple_mac`); an ARP request sent by the FPGA is answered by the peer.
+- PL Ethernet over a real cable at 1000 Mb/s: MAC front end in the PL, protocol stack in software on the PS (`pl/ple_mac`); an ARP request sent by the FPGA is answered by the peer, and the FPGA (10.0.0.2) answers the laptop's ARP, six pings and a UDP echo (counted on the board: 1 ARP reply, 6 ICMP echo replies, 1 UDP echo).
 - Memory: the boot chain's DDR init passes a bare-metal 511 MiB random-pattern test and a two-core Linux memory stress (`tests/`).
 - Boot: boot ROM -> open-built U-Boot SPL (hand-written PS7 init) -> U-Boot -> PYNQ Linux, from the SD card.
 - Not independent of Xilinx tools: the DDR PHY tuning values in the PS7 init, and the U-Boot device tree (`pcw.dtsi`), both derived from the Vivado hardware export.
