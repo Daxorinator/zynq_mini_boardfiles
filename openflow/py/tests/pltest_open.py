@@ -97,6 +97,12 @@ def t_dma():
         if st & 4 or bytes(b.mm[:n]) != d or bytes(b.mm[n:n + 256]) != b"\xa5" * 256 or regs[R["CSUM"]] != want:
             return Result("FAIL", "copy %d bytes: data/guard/checksum mismatch (status %#x)" % (n, st))
         notes.append("%d B in %d cycles" % (n, regs[R["CYC"]])); a.close(); b.close()
+    a, b = allocate(4096), allocate(4096)                   # misaligned or odd-length runs must be rejected (error flag, nothing written)
+    b.mm[:4096] = b"\x5a" * 4096
+    for sa, da, n in ((a.phys_addr + 64, b.phys_addr, 256), (a.phys_addr, b.phys_addr + 32, 256), (a.phys_addr, b.phys_addr, 100)):
+        st = run(sa, da, n, 0)
+        if st is None or not st & 4 or bytes(b.mm[:4096]) != b"\x5a" * 4096: return Result("FAIL", "misaligned/odd-length DMA run not rejected (status %s)" % st)
+    a.close(); b.close(); notes.append("misaligned runs rejected")
     irq = UioIrq(); a, b = allocate(1 << 20), allocate(1 << 20); d = rnd.randbytes(1 << 20); a.mm[:] = d; b.mm[:] = bytes(1 << 20)
     regs[R["CTRL"]] = 4; irq.rearm(); regs[R["SRC"]] = a.phys_addr; regs[R["DST"]] = b.phys_addr; regs[R["LEN"]] = 1 << 20; regs[R["CTRL"]] = 1 | 8
     got = irq.wait(3.0); regs[R["CTRL"]] = 4; irq.close()

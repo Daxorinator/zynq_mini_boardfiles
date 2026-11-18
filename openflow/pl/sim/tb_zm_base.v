@@ -97,6 +97,14 @@ module tb_zm_base;
     // --- zero length completes without bus traffic ---
     begin : zl integer r0; r0 = dut.ps7.hp_reads; dma(0, 0, 0, 32'h3); wait_done(ok); check("zero-length done", ok, 1); check("zero-length no reads", dut.ps7.hp_reads, r0); end
     $display("[%0t] bus error", $time);
+    // --- misaligned runs are rejected with the error flag and no bus traffic ---
+    begin : ma integer r0, w0; r0 = dut.ps7.hp_reads; w0 = dut.ps7.hp_writes;
+      dut.ps7.gp_write(32'h114, 32'h4); dma(32'h0001_0040, 32'h0004_0000, 256, 32'h1); wait_done(ok); check("misaligned src rejected", ok, 1); dut.ps7.gp_read(32'h118, v); check("misaligned src err", v[2], 1);
+      dut.ps7.gp_write(32'h114, 32'h4); dma(32'h0001_0000, 32'h0004_0020, 256, 32'h1); wait_done(ok); dut.ps7.gp_read(32'h118, v); check("misaligned dst err", v[2], 1);
+      dut.ps7.gp_write(32'h114, 32'h4); dma(32'h0001_0000, 32'h0004_0000, 100, 32'h1); wait_done(ok); dut.ps7.gp_read(32'h118, v); check("bad length err", v[2], 1);
+      check("no bus traffic for rejected runs", dut.ps7.hp_reads + dut.ps7.hp_writes, r0 + w0);
+      dut.ps7.gp_write(32'h114, 32'h4); dma(32'h0001_0000, 32'h0004_0020, 256, 32'h3); wait_done(ok); dut.ps7.gp_read(32'h118, v); check("checksum-only ignores dst alignment", v[2], 0);
+    end
     // --- bus error response is reported ---
     dut.ps7.inject_hp_error = 1; dut.ps7.gp_write(32'h114, 32'h4); dma(32'h0001_0000, 32'h0004_0000, 128, 32'h1); wait_done(ok);
     dut.ps7.gp_read(32'h118, v); check("read error flagged", v[2], 1); dut.ps7.inject_hp_error = 0;

@@ -34,6 +34,11 @@ module tb_hp_dma;
     dut.ps7.mem[(32'h0007_0000 >> 3)] = 64'h77; dma(32'h0002_0000, 32'h0007_0000, 2048, 32'h3); wait_done(ok); check("csum-only done", ok, 1);
     check("csum-only wrote nothing", dut.ps7.mem[(32'h0007_0000 >> 3)] === 64'h77, 1);
     begin : zl integer r0; r0 = dut.ps7.hp_reads; dma(0, 0, 0, 32'h3); wait_done(ok); check("zero length done", ok, 1); check("zero length no bus reads", dut.ps7.hp_reads, r0); end
+    begin : ma integer r0; r0 = dut.ps7.hp_reads + dut.ps7.hp_writes;
+      dut.ps7.gp_write(32'h14, 32'h4); dma(32'h0002_0040, 32'h0005_0000, 256, 32'h1); wait_done(ok); dut.ps7.gp_read(32'h18, v); check("misaligned src err", v[2], 1);
+      dut.ps7.gp_write(32'h14, 32'h4); dma(32'h0002_0000, 32'h0005_0020, 256, 32'h1); wait_done(ok); dut.ps7.gp_read(32'h18, v); check("misaligned dst err", v[2], 1);
+      check("no bus traffic for rejected runs", dut.ps7.hp_reads + dut.ps7.hp_writes, r0);
+    end
     dut.ps7.inject_hp_error = 1; dut.ps7.gp_write(32'h14, 32'h4); dma(32'h0002_0000, 32'h0005_0000, 128, 32'h1); wait_done(ok);
     dut.ps7.gp_read(32'h18, v); check("read error flagged", v[2], 1); dut.ps7.inject_hp_error = 0;
     dut.ps7.inject_hp_werror = 1; dut.ps7.gp_write(32'h14, 32'h4); dma(32'h0002_0000, 32'h0005_0000, 128, 32'h1); wait_done(ok);

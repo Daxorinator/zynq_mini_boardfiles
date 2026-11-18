@@ -88,7 +88,7 @@ module zm_base(input clk50, input [1:0] key, output [3:0] led,
 
   // ---- DMA engine (HP0), as in hp_dma ----
   reg [31:0] src = 0, dst = 0, len = 0, rem = 0, sa = 0, da = 0, csum = 0, cycles = 0, bytes_done = 0;
-  reg mode = 0, irq_en = 0, busy = 0, done = 0, err = 0;
+  reg mode = 0, mode_run = 0, irq_en = 0, busy = 0, done = 0, err = 0;
   reg start_tog = 0, clr_tog = 0, start_d = 0, clr_d = 0;
   wire start = start_tog ^ start_d, clr = clr_tog ^ clr_d;
   reg [63:0] buffer [0:15]; reg [4:0] beat = 0;
@@ -100,13 +100,13 @@ module zm_base(input clk50, input [1:0] key, output [3:0] led,
     case (st)
       IDLE: if (start) begin
               if (src[6:0] != 0 || len[6:0] != 0 || (!mode && dst[6:0] != 0)) begin done <= 1; err <= 1; end     // misaligned: bursts would cross 4 KiB boundaries, reject
-              else begin busy <= 1; done <= 0; err <= 0; rem <= len; sa <= src; da <= dst; csum <= 0; cycles <= 0; bytes_done <= 0; st <= (len == 0) ? NEXT : AR; end
+              else begin busy <= 1; done <= 0; err <= 0; mode_run <= mode; rem <= len; sa <= src; da <= dst; csum <= 0; cycles <= 0; bytes_done <= 0; st <= (len == 0) ? NEXT : AR; end
             end
       AR:  begin hp_araddr <= sa; hp_arvalid <= 1; if (hp_arvalid && hp_arready) begin hp_arvalid <= 0; hp_rready <= 1; beat <= 0; st <= RD; end end
       RD:  if (hp_rvalid && hp_rready) begin
              buffer[beat[3:0]] <= hp_rdata; beat <= beat + 1; csum <= csum + hp_rdata[31:0] + hp_rdata[63:32];
              if (hp_rresp != 0) err <= 1;
-             if (hp_rlast) begin hp_rready <= 0; st <= mode ? NEXT : AW; end
+             if (hp_rlast) begin hp_rready <= 0; st <= mode_run ? NEXT : AW; end
            end
       AW:  begin hp_awaddr <= da; hp_awvalid <= 1; if (hp_awvalid && hp_awready) begin hp_awvalid <= 0; beat <= 0; hp_wdata <= buffer[0]; hp_wvalid <= 1; hp_wlast <= 0; st <= WR; end end
       WR:  if (hp_wvalid && hp_wready) begin
