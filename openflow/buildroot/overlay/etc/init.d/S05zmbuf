@@ -1,0 +1,5 @@
+#!/bin/sh
+# load the DMA-buffer driver (and the UIO generic driver for the PL interrupt) if present
+case "$1" in
+  start) modprobe zmbuf 2>/dev/null; modprobe uio_pdrv_genirq 2>/dev/null; true ;;
+esac

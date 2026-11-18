@@ -3,7 +3,7 @@
 usage: mkimage.py --base-image ZynqMini-3.1.2.img --boot-bin BOOT.BIN --u-boot-img u-boot.img --kernel-dir build/out --out open.img
 The root filesystem (partition 2) is taken from the base image (the existing PYNQ/Ubuntu userland, unchanged except that the new kernel's
 modules and a modules-load entry for the zmbuf driver are added); partition 1 is a new FAT32 volume holding BOOT.BIN, U-BOOT.IMG, a boot
-script, the kernel and the device tree. Needs: mkfs.fat, debugfs (e2fsprogs), mkimage (u-boot-tools), sfdisk. Pure-Python FAT writer below."""
+script, the kernel and the device tree. Needs: mkfs.fat, debugfs (e2fsprogs; set DEBUGFS=... to a debugfs at least as new as the mkfs.ext4 that made the filesystem, e.g. Buildroot's host/sbin/debugfs for its image), mkimage (u-boot-tools), sfdisk. Pure-Python FAT writer below."""
 import argparse, os, shutil, struct, subprocess, sys, tempfile
 
 def run(*a, **k): return subprocess.run(a, check=True, **k)
@@ -65,23 +65,34 @@ def debugfs_script(stage_root, dest_root, extra_files):
 
 def main():
     ap = argparse.ArgumentParser()
-    for a in ("base-image", "boot-bin", "u-boot-img", "kernel-dir", "out"): ap.add_argument("--" + a, required=True)
+    for a in ("boot-bin", "u-boot-img", "kernel-dir", "out"): ap.add_argument("--" + a, required=True)
+    ap.add_argument("--base-image", help="copy the root filesystem (partition 2) from this existing image (e.g. the PYNQ image)")
+    ap.add_argument("--rootfs-image", help="or: an ext4 file (e.g. the Buildroot image from ../buildroot) to use as the root filesystem")
     o = ap.parse_args()
     out = o.out
     with tempfile.TemporaryDirectory() as tmp:
-        # partition table of the base image
-        sf = subprocess.run(["sfdisk", "-d", o.base_image], capture_output=True, text=True, check=True).stdout
-        parts = {}
-        for line in sf.splitlines():
-            if line.startswith(o.base_image + "1") or line.startswith(o.base_image + "2"):
-                num = line[len(o.base_image)]; kv = dict(x.strip().split("=", 1) for x in line.split(":", 1)[1].split(",") if "=" in x)
-                parts[num] = (int(kv["start"]) * 512, int(kv["size"]) * 512)
-        if len(parts) != 2: sys.exit("base image must have 2 partitions (FAT boot + ext4 root)")
-        print("copying base image (sparse) ..."); run("cp", "--sparse=always", o.base_image, out)
+        if bool(o.base_image) == bool(o.rootfs_image): sys.exit("give exactly one of --base-image and --rootfs-image")
+        if o.base_image:
+            # partition table of the base image
+            sf = subprocess.run(["sfdisk", "-d", o.base_image], capture_output=True, text=True, check=True).stdout
+            parts = {}
+            for line in sf.splitlines():
+                if line.startswith(o.base_image + "1") or line.startswith(o.base_image + "2"):
+                    num = line[len(o.base_image)]; kv = dict(x.strip().split("=", 1) for x in line.split(":", 1)[1].split(",") if "=" in x)
+                    parts[num] = (int(kv["start"]) * 512, int(kv["size"]) * 512)
+            if len(parts) != 2: sys.exit("base image must have 2 partitions (FAT boot + ext4 root)")
+            print("copying base image (sparse) ..."); run("cp", "--sparse=always", o.base_image, out)
+        else:
+            rsz = os.path.getsize(o.rootfs_image); p1s, p1n = 8 * 512 * 32, 266240 * 512            # boot partition: 130 MiB at 128 KiB... (sector 8192)
+            p1s = 8192 * 512; p2s = p1s + p1n; p2n = (rsz + 511) // 512 * 512
+            parts = {"1": (p1s, p1n), "2": (p2s, p2n)}
+            with open(out, "wb") as f: f.truncate(p2s + p2n)
+            run("sfdisk", "-q", out, input=("label: dos\n%d,%d,c,*\n%d,%d,83\n" % (p1s // 512, p1n // 512, p2s // 512, p2n // 512)).encode(), stdout=subprocess.DEVNULL)
+            with open(out, "r+b") as img, open(o.rootfs_image, "rb") as f: img.seek(p2s); shutil.copyfileobj(f, img, 1 << 20)
         # boot script and FAT volume
         script = os.path.join(tmp, "boot.cmd")
         open(script, "w").write("""# ZYNQ MINI open boot: kernel and device tree from this FAT partition, root filesystem on partition 2
-setenv bootargs root=/dev/mmcblk0p2 rw rootfstype=ext4 rootwait earlycon devtmpfs.mount=1 clk_ignore_unused uio_pdrv_genirq.of_id=generic-uio
+setenv bootargs root=/dev/mmcblk${devnum}p2 rw rootfstype=ext4 rootwait earlycon devtmpfs.mount=1 clk_ignore_unused uio_pdrv_genirq.of_id=generic-uio
 fatload mmc 0:1 0x02000000 zimage
 fatload mmc 0:1 0x01f00000 zynqmini.dtb
 bootz 0x02000000 - 0x01f00000
@@ -100,7 +111,7 @@ bootz 0x02000000 - 0x01f00000
         cmd = os.path.join(tmp, "debugfs.cmd")
         open(cmd, "w").write(debugfs_script(os.path.join(stage, "modules"), "/lib/modules", [(conf, "/etc/modules-load.d/zmbuf.conf")]))
         print("adding modules to the root filesystem ...")
-        r = subprocess.run(["debugfs", "-w", "-f", cmd, "%s?offset=%d" % (out, parts["2"][0])], capture_output=True, text=True)
+        r = subprocess.run([os.environ.get("DEBUGFS", "debugfs"), "-w", "-f", cmd, "%s?offset=%d" % (out, parts["2"][0])], capture_output=True, text=True)
         errs = [l for l in r.stdout.splitlines() + r.stderr.splitlines() if "rror" in l and "already exists" not in l.lower()]
         if errs: print("debugfs messages:", *errs[:5], sep="\n  ")
     print("image written:", out)

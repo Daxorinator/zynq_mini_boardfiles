@@ -112,9 +112,25 @@ Verified on hardware, running the PYNQ image (PS side and Linux; test scripts in
 - USB host (full-speed keyboard, high-speed flash drive)
 - USB device mode: mass storage, and serial plus Ethernet (CDC ACM + NCM) to a Windows 11 PC
 
+## Choose your path
+
+The board runs on two independent software stacks; pick one (both are kept working):
+
+| | PYNQ path | Open-source path |
+|---|---|---|
+| PL designs | Vivado (board files in `zynq_mini/`, overlays in `pynq/overlay`) | Yosys + nextpnr-xilinx + Project X-Ray (`openflow/pl`) |
+| Boot chain | Xilinx FSBL / PetaLinux U-Boot | hand-written PS7 init + U-Boot SPL, from SD or QSPI (`openflow/boot`) |
+| Kernel, root filesystem | PetaLinux/PYNQ image (`pynq/`) | kernel and hand-written device tree built from source, Buildroot userland (`openflow/linux`, `openflow/buildroot`) |
+| Python | the PYNQ library (Jupyter, Overlay, ...) | `zynqmini`: bitstream loading, registers, clocks, DMA buffers, interrupts (`openflow/py`) |
+| Debugging | Vivado/Vitis | OpenOCD + GDB (`openflow/debug`), RTL simulation and formal checks (`openflow/pl/sim`, `openflow/pl/formal`) |
+| Needs | Vivado, PetaLinux, a PYNQ build | open-source tools only; `openflow/build_all.sh` builds everything into one SD image |
+| Does not have | | the PYNQ Python library, Jupyter, Ubuntu packages (the PYNQ image is still usable on the open kernel's boot chain, but PYNQ's own library does not run there) |
+
+Both paths can be mixed (for example the open boot chain with the PYNQ image, as tested).
+
 ## Open-source flow
 
-[`openflow/`](openflow/) runs the board on open-source tools instead of Vivado: PL designs built with Yosys and nextpnr-xilinx (LEDs, keys, OLED, I2C EEPROM, PS-to-PL AXI, HDMI up to 1280x720, PL Ethernet), and a boot chain from the first stage up (a hand-written PS7 init and a U-Boot SPL that boots the PYNQ image). See [`openflow/README.md`](openflow/README.md).
+[`openflow/`](openflow/) runs the board on open-source tools instead of Vivado: PL designs built with Yosys and nextpnr-xilinx (LEDs, keys, OLED, I2C EEPROM, PS-to-PL AXI, HDMI up to 1280x720, PL Ethernet, PL DMA), a boot chain from the first stage up (a hand-written PS7 init and a U-Boot SPL, booting from SD or from the QSPI flash), a kernel with a hand-written device tree, and a source-built userland. See [`openflow/README.md`](openflow/README.md).
 
 ## License
 
