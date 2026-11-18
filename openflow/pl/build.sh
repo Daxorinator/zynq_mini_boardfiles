@@ -8,7 +8,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 source "$HERE/env.sh"
 P=$1; T=${2:-$1}; D=xc7z010clg400-1
 [ -f "$HERE/$P/$T.v" ] || { echo "usage: $0 <project> [top]  (no $P/$T.v)"; exit 1; }
-W=$HERE/build/$P; mkdir -p "$W"; cp "$HERE/$P"/* "$W"/; cd "$W"
+W=$HERE/build/$P; mkdir -p "$W"; cp -r "$HERE/$P"/. "$W"/; cd "$W"
 yosys -q -p "read_verilog $T.v; synth_xilinx -flatten -abc9 -arch xc7 -top $T; write_json $T.json"
 nextpnr-xilinx ${SEED:+--seed $SEED} --chipdb "$CHIPDB" --device $D --json $T.json --write ${T}_r.json \
     -o xdc=$T.xdc -o fasm=$T.fasm > $T.pnr.log 2>&1 || { tail -20 $T.pnr.log; exit 1; }
