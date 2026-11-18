@@ -34,6 +34,13 @@
 
 &qspi {
 	bootph-all;
+	/* W25Q128FV, 16 MiB: the SPL reads u-boot.img from it when the boot switch selects QSPI */
+	flash@0 {
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <50000000>;
+		bootph-all;
+	};
 };
 
 &gem0 {
