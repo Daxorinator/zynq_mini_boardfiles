@@ -5,16 +5,19 @@
 The PS builds and parses all frames (including the FCS) and talks to the PL through registers over GP0; the PL does the RGMII timing.
 Addresses: FPGA 10.0.0.2 (MAC 02:5a:59:4d:50:4c), peer (the laptop) 10.0.0.1."""
 import mmap, os, struct, sys, time, zlib
-from pynq import Clocks
-from mdio import Mdio
+NOHW = bool(os.environ.get("PLE_NET_NOHW"))          # offline protocol tests (test_protocol.py) run without the board
+if not NOHW:
+    from pynq import Clocks
+    from mdio import Mdio
 
 MY_MAC = bytes.fromhex("025a594d504c"); MY_IP = bytes([10, 0, 0, 2]); PEER_IP = bytes([10, 0, 0, 1])
 BCAST = b"\xff" * 6
-Clocks.fclk0_mhz = 100
-fd = os.open("/dev/mem", os.O_RDWR | os.O_SYNC)
-m = mmap.mmap(fd, 0x1000, mmap.MAP_SHARED, mmap.PROT_READ | mmap.PROT_WRITE, offset=0x40000000)
-rd = lambda o: int.from_bytes(m[o:o + 4], "little")
-wr = lambda o, v: m.__setitem__(slice(o, o + 4), (v & 0xFFFFFFFF).to_bytes(4, "little"))
+if not NOHW:
+    Clocks.fclk0_mhz = 100
+    fd = os.open("/dev/mem", os.O_RDWR | os.O_SYNC)
+    m = mmap.mmap(fd, 0x1000, mmap.MAP_SHARED, mmap.PROT_READ | mmap.PROT_WRITE, offset=0x40000000)
+    rd = lambda o: int.from_bytes(m[o:o + 4], "little")
+    wr = lambda o, v: m.__setitem__(slice(o, o + 4), (v & 0xFFFFFFFF).to_bytes(4, "little"))
 CTRL, STATUS, RXLEN, TXLEN, FRX, FTX, MISS = 0x24, 0x28, 0x2C, 0x30, 0x34, 0x38, 0x3C
 RXBUF, TXBUF = 0x400, 0x200
 
@@ -86,7 +89,7 @@ def handle(frame, stats):
             send(eth(src, MY_MAC, 0x0800, ipv4(sip, 1, icmp(0, ident, seq, body[8:]), ident))); stats["icmp_replies"] += 1
         elif proto == 1 and body[0] == 0: stats["icmp_in"] += 1
         elif proto == 17 and struct.unpack("!H", body[2:4])[0] == 7:
-            sp, dp = struct.unpack("!HH", body[0:2]); data = body[8:struct.unpack("!H", body[4:6])[0]]
+            sp, dp = struct.unpack("!HH", body[0:4]); data = body[8:struct.unpack("!H", body[4:6])[0]]
             udp = struct.pack("!HHHH", 7, sp, 8 + len(data), 0) + data
             send(eth(src, MY_MAC, 0x0800, ipv4(sip, 17, udp))); stats["udp_echo"] += 1
 
