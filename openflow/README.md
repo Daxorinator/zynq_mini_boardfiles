@@ -7,6 +7,9 @@ and the tests. The Vivado board files in `../zynq_mini/` and the PYNQ image in `
 |---|---|
 | `pl/` | PL designs built with Yosys + nextpnr-xilinx (openXC7): LED/key blinky, OLED, I2C EEPROM + PS-PL AXI test, clock meter, HDMI 640x480 and 1280x720, a PL DMA through the HP port with interrupt, PL Ethernet (MDIO, RGMII loopback, MAC front end). `./build.sh <project>`, `./load.sh <file.bin>` |
 | `boot/` | PS bring-up without Vivado: hand-written `ps7_init` (`boot/ps7`), U-Boot SPL build (`boot/build.sh` -> `BOOT.BIN`, `u-boot.img`), bare-metal DDR test, an open BOOT.BIN assembler |
+| `linux/` | Open Linux: kernel build, hand-written device tree, `zmbuf` DMA-buffer driver, SD image assembler |
+| `py/` | `zynqmini`: PYNQ-free Python layer (bitstream loading, registers, FCLK, DMA buffers, interrupts) and the open-flow `pltest` |
+| `debug/` | OpenOCD configuration and GDB demo for the PS over JTAG |
 | `tests/` | Board tests: DDR stability (bare-metal and Linux), HDMI capture-card check |
 
 Status (tested on REV B, XC7Z010-1CLG400, 2026-11):
