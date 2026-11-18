@@ -26,6 +26,7 @@ def load_bitstream(path, name=None):
     if data[:2] == b"\x00\x09":                                     # a .bit file (header starts 00 09 0f f0 ...)
         data = bit_to_bin(data)
     name = name or "zm_" + os.path.basename(path).rsplit(".", 1)[0] + ".bin"
+    os.makedirs("/lib/firmware", exist_ok=True)           # minimal root filesystems (e.g. Buildroot) do not have it
     with open("/lib/firmware/" + name, "wb") as f: f.write(data)
     open(MGR + "/flags", "w").write("0")                            # full reconfiguration
     open(MGR + "/firmware", "w").write(name)
