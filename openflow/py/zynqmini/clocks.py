@@ -30,7 +30,8 @@ def set_fclk(n, mhz):
             if best is None or abs(f - mhz) < abs(best[0] - mhz): best = (f, d0, d1)
     f, d0, d1 = best
     s = _slcr(); reg = 0x170 + 0x10 * n
+    was_locked = s[0x00C] & 1                         # SLCR_LOCKSTA: Linux keeps the SLCR unlocked (its restart handler needs that), so only re-lock if it was locked
     s[0x008] = 0xDF0D                                # unlock the SLCR
     s[reg] = (s[reg] & ~((0x3 << 4) | (0x3F << 8) | (0x3F << 20))) | (d0 << 8) | (d1 << 20)   # source 0 = IO PLL
-    s[0x004] = 0x767B                                # lock again
+    if was_locked: s[0x004] = 0x767B                 # restore the previous lock state
     return fclk_mhz(n)
