@@ -1,0 +1,82 @@
+{
+ "name": "ple_mac",
+ "base": "0x40000000",
+ "size": "0x1000",
+ "fclk": {
+  "0": 100.0
+ },
+ "registers": {
+  "ID": {
+   "offset": "0x00",
+   "access": "r",
+   "description": "'MAC1' = 0x4D414331"
+  },
+  "SCRATCH": {
+   "offset": "0x04",
+   "access": "rw",
+   "description": "scratch"
+  },
+  "MDIO_CTRL": {
+   "offset": "0x1C",
+   "access": "rw",
+   "description": "bit0 phy_reset_n, bit1 MDC, bit2 MDIO release"
+  },
+  "MDIO_PIN": {
+   "offset": "0x20",
+   "access": "r",
+   "description": "bit0 MDIO pin"
+  },
+  "CTRL": {
+   "offset": "0x24",
+   "access": "w",
+   "description": "bit0 transmit the TX buffer, bit1 release the RX buffer, bit2 clear counters, bit3 arm the debug analyzer"
+  },
+  "STATUS": {
+   "offset": "0x28",
+   "access": "r",
+   "description": "bit0 rx_ready, bit1 tx_busy, bits 7:4 RGMII in-band status, bit8 analyzer captured"
+  },
+  "RX_LEN": {
+   "offset": "0x2C",
+   "access": "r",
+   "description": "raw bytes captured (preamble included)"
+  },
+  "TX_LEN": {
+   "offset": "0x30",
+   "access": "rw",
+   "description": "bytes to send after the preamble (FCS included)"
+  },
+  "FRAMES_RX": {
+   "offset": "0x34",
+   "access": "r",
+   "description": "frames received"
+  },
+  "FRAMES_TX": {
+   "offset": "0x38",
+   "access": "r",
+   "description": "frames sent"
+  },
+  "MISSED": {
+   "offset": "0x3C",
+   "access": "r",
+   "description": "frames missed while the RX buffer was full"
+  }
+ },
+ "arrays": {
+  "TXBUF": {
+   "offset": "0x200",
+   "count": 80,
+   "access": "w"
+  },
+  "RXBUF": {
+   "offset": "0x400",
+   "count": 320,
+   "access": "r"
+  },
+  "ANALYZER": {
+   "offset": "0xA00",
+   "count": 256,
+   "access": "r"
+  }
+ }
+}

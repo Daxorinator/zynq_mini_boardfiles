@@ -1,0 +1,181 @@
+{
+ "name": "zm_base",
+ "base": "0x40000000",
+ "size": "0x1000",
+ "fclk": {
+  "0": 100.0
+ },
+ "interrupt": "fabric",
+ "registers": {
+  "ID": {
+   "offset": "0x000",
+   "access": "r",
+   "description": "'ZMB1' = 0x5A4D4231"
+  },
+  "SCRATCH": {
+   "offset": "0x004",
+   "access": "rw",
+   "description": "scratch register"
+  },
+  "MMCM_LOCKED": {
+   "offset": "0x008",
+   "access": "r",
+   "description": "bit0: the PL MMCM is locked"
+  },
+  "LEDS": {
+   "offset": "0x010",
+   "access": "rw",
+   "description": "LED1..4 (bits 3:0)"
+  },
+  "KEYS": {
+   "offset": "0x014",
+   "access": "r",
+   "description": "KEY2/KEY3 pin levels (0 = pressed)"
+  },
+  "HDR_OUT0": {
+   "offset": "0x020",
+   "access": "rw",
+   "description": "header output bits 31:0"
+  },
+  "HDR_OUT1": {
+   "offset": "0x024",
+   "access": "rw",
+   "description": "header output bits 33:32"
+  },
+  "HDR_TRI0": {
+   "offset": "0x028",
+   "access": "rw",
+   "description": "header direction bits 31:0 (1 = input, the reset state)"
+  },
+  "HDR_TRI1": {
+   "offset": "0x02C",
+   "access": "rw",
+   "description": "header direction bits 33:32"
+  },
+  "HDR_IN0": {
+   "offset": "0x030",
+   "access": "r",
+   "description": "header pin levels bits 31:0"
+  },
+  "HDR_IN1": {
+   "offset": "0x034",
+   "access": "r",
+   "description": "header pin levels bits 33:32"
+  },
+  "I2C": {
+   "offset": "0x040",
+   "access": "rw",
+   "description": "write: bit0 SCL, bit1 SDA release; read: bit0 SCL, bit1 SDA pin (EEPROM)"
+  },
+  "OLED": {
+   "offset": "0x050",
+   "access": "rw",
+   "description": "OLED pins: bit0 SCLK, bit1 MOSI, bit2 DC, bit3 RES"
+  },
+  "PHY": {
+   "offset": "0x060",
+   "access": "rw",
+   "description": "PL Ethernet PHY: bit0 reset_n, bit1 MDC, bit2 MDIO release"
+  },
+  "PHY_PIN": {
+   "offset": "0x064",
+   "access": "r",
+   "description": "bit0: MDIO pin level"
+  },
+  "TIMER_CTRL": {
+   "offset": "0x070",
+   "access": "rw",
+   "description": "bit0 enable, bit1 interrupt enable"
+  },
+  "TIMER_PERIOD": {
+   "offset": "0x074",
+   "access": "rw",
+   "description": "period in aclk cycles"
+  },
+  "TIMER_COUNT": {
+   "offset": "0x078",
+   "access": "r",
+   "description": "current count"
+  },
+  "TIMER_STATUS": {
+   "offset": "0x07C",
+   "access": "w1c",
+   "description": "bit0 pending; write 1 to clear"
+  },
+  "METER_50": {
+   "offset": "0x080",
+   "access": "r",
+   "description": "cycles of the 50 MHz oscillator in one 2^20-aclk window"
+  },
+  "METER_100": {
+   "offset": "0x084",
+   "access": "r",
+   "description": "MMCM 100 MHz"
+  },
+  "METER_150": {
+   "offset": "0x088",
+   "access": "r",
+   "description": "MMCM 150 MHz"
+  },
+  "METER_200": {
+   "offset": "0x08C",
+   "access": "r",
+   "description": "MMCM 200 MHz"
+  },
+  "METER_FCLK1": {
+   "offset": "0x090",
+   "access": "r",
+   "description": "FCLK1"
+  },
+  "METER_FCLK2": {
+   "offset": "0x094",
+   "access": "r",
+   "description": "FCLK2"
+  },
+  "METER_WINDOW": {
+   "offset": "0x098",
+   "access": "r",
+   "description": "window counter"
+  },
+  "DMA_SRC": {
+   "offset": "0x108",
+   "access": "rw",
+   "description": "source physical address (128-byte aligned)"
+  },
+  "DMA_DST": {
+   "offset": "0x10C",
+   "access": "rw",
+   "description": "destination physical address (128-byte aligned, copy mode)"
+  },
+  "DMA_LEN": {
+   "offset": "0x110",
+   "access": "rw",
+   "description": "bytes, multiple of 128"
+  },
+  "DMA_CTRL": {
+   "offset": "0x114",
+   "access": "w",
+   "description": "bit0 start, bit1 checksum-only, bit2 clear done/irq, bit3 irq enable"
+  },
+  "DMA_STATUS": {
+   "offset": "0x118",
+   "access": "r",
+   "description": "bit0 busy, bit1 done, bit2 error"
+  },
+  "DMA_CHECKSUM": {
+   "offset": "0x11C",
+   "access": "r",
+   "description": "sum of all 32-bit words read"
+  },
+  "DMA_CYCLES": {
+   "offset": "0x120",
+   "access": "r",
+   "description": "aclk cycles of the last run"
+  },
+  "DMA_BYTES": {
+   "offset": "0x124",
+   "access": "r",
+   "description": "bytes done"
+  }
+ }
+}

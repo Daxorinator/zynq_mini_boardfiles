@@ -22,9 +22,30 @@ class Buffer:
     def array(self, dtype):
         import numpy as np
         return np.frombuffer(self.mm, dtype=dtype)
+    def __enter__(self): return self
+    def __exit__(self, *a): self.close()
     def close(self):
         self.mm.close()
         try: fcntl.ioctl(self.fd, ZMBUF_FREE, struct.pack("QQ", 0, self.phys_addr))
         finally: os.close(self.fd)
 
-def allocate(nbytes): return Buffer(nbytes)
+class ContigArray:
+    """numpy-style access to a contiguous buffer: `a = allocate((1024,), "uint32")`; `a.phys_addr` is what the PL needs. Behaves like an ndarray through `a.array`."""
+    def __init__(self, shape, dtype):
+        import numpy as np
+        shape = (shape,) if isinstance(shape, int) else tuple(shape)
+        self.buffer = Buffer(int(np.prod(shape)) * np.dtype(dtype).itemsize)
+        self.array = self.buffer.array(dtype)[:int(np.prod(shape))].reshape(shape)
+        self.phys_addr = self.physical_address = self.buffer.phys_addr
+    def __getitem__(self, i): return self.array[i]
+    def __setitem__(self, i, v): self.array[i] = v
+    def __len__(self): return len(self.array)
+    def __array__(self, dtype=None, copy=None): return self.array if dtype is None else self.array.astype(dtype)
+    def free(self): self.buffer.close()
+    close = free
+    def __enter__(self): return self
+    def __exit__(self, *a): self.free()
+
+def allocate(nbytes_or_shape, dtype=None):
+    """allocate(4096) -> Buffer (bytes via .mm);  allocate((256, 4), "uint32") -> ContigArray (numpy view in .array, same API idea as PYNQ's allocate)."""
+    return Buffer(nbytes_or_shape) if dtype is None else ContigArray(nbytes_or_shape, dtype)

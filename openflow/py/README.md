@@ -5,6 +5,9 @@ Run on the board as root. `import zynqmini` gives: `load_bitstream` (FPGA manage
 `UioIrq` (PL interrupt through UIO) and `Mdio` (PHY management bit-banged through a PL register block).
 It needs the open kernel (`../linux`) for `allocate` (`zmbuf`); the other parts work on any kernel with /dev/mem and the FPGA manager.
 
+PYNQ-style use: `Overlay("zm_base")` loads the bitstream and a JSON register map (`zynqmini/maps/*.json`; open-flow designs have no Vivado metadata) and exposes registers as attributes (`ol.LEDS = 5`, `ol.METER_100`),
+`HpDma` drives the PL DMA, `allocate((n,), "uint32")` gives numpy-backed contiguous buffers. `pip install ./py` installs it (pyproject.toml); `notebooks/` has example notebooks; `python3 tests/test_overlay_offline.py` tests the layer without a board.
+
 Tests (`python3 tests/<name>.py <bitstream.bin>`):
 - `hp_dma_test.py ../pl/build/hp_dma/hp_dma.bin`: PL DMA through HP0 to 8 MiB, checksums, interrupt wakes a sleeping process. PASS on the open kernel.
 - `pltest_open.py ../pl/build/zm_base/zm_base.bin`: the open-flow counterpart of the Vivado `pynq/overlay/pltest` overlay: LEDs and keys, clock meters (50/100/150/200 MHz

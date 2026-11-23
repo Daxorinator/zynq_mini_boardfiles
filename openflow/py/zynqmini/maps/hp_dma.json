@@ -1,0 +1,61 @@
+{
+ "name": "hp_dma",
+ "base": "0x40000000",
+ "size": "0x1000",
+ "fclk": {
+  "0": 100.0
+ },
+ "interrupt": "fabric",
+ "registers": {
+  "ID": {
+   "offset": "0x00",
+   "access": "r",
+   "description": "'HPD1' = 0x48504431"
+  },
+  "SCRATCH": {
+   "offset": "0x04",
+   "access": "rw",
+   "description": "scratch"
+  },
+  "SRC": {
+   "offset": "0x08",
+   "access": "rw",
+   "description": "source physical address (128-byte aligned)"
+  },
+  "DST": {
+   "offset": "0x0C",
+   "access": "rw",
+   "description": "destination physical address (128-byte aligned, copy mode)"
+  },
+  "LEN": {
+   "offset": "0x10",
+   "access": "rw",
+   "description": "bytes, multiple of 128"
+  },
+  "CTRL": {
+   "offset": "0x14",
+   "access": "w",
+   "description": "bit0 start, bit1 checksum-only, bit2 clear done/irq, bit3 irq enable"
+  },
+  "STATUS": {
+   "offset": "0x18",
+   "access": "r",
+   "description": "bit0 busy, bit1 done, bit2 error"
+  },
+  "CHECKSUM": {
+   "offset": "0x1C",
+   "access": "r",
+   "description": "sum of all 32-bit words read"
+  },
+  "CYCLES": {
+   "offset": "0x20",
+   "access": "r",
+   "description": "aclk cycles of the last run"
+  },
+  "BYTES": {
+   "offset": "0x24",
+   "access": "r",
+   "description": "bytes done"
+  }
+ }
+}
