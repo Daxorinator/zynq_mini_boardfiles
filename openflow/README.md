@@ -18,7 +18,13 @@ Status (tested on REV B, XC7Z010-1CLG400, 2026-11):
 - PS and PL together: a PL DMA block moving data to and from DDR through the PS's AXI high-performance port, controlled from Linux, with an interrupt that wakes a sleeping process (`pl/hp_dma`).
 - PL Ethernet over a real cable at 1000 Mb/s: MAC front end in the PL, protocol stack in software on the PS (`pl/ple_mac`); an ARP request sent by the FPGA is answered by the peer, and the FPGA (10.0.0.2) answers the laptop's ARP, six pings and a UDP echo (counted on the board: 1 ARP reply, 6 ICMP echo replies, 1 UDP echo).
 - Memory: the boot chain's DDR init passes a bare-metal 511 MiB random-pattern test and a two-core Linux memory stress (`tests/`).
-- Boot: boot ROM -> open-built U-Boot SPL (hand-written PS7 init) -> U-Boot -> PYNQ Linux, from the SD card.
+- Boot: boot ROM -> open-built U-Boot SPL (hand-written PS7 init) -> U-Boot -> Linux, from SD slot 1 or from the QSPI flash (`boot/qspi`; the SD cards then need no bootloader). The kernel is built from source with a hand-written device tree (`linux/`);
+  the root filesystem is either the PYNQ/Ubuntu userland or the source-built Buildroot image (`buildroot/`, Python 3 + numpy, ssh, the `zynqmini` layer and tests preinstalled).
+- A/B slots: U-Boot's `boot_targets` (saved in the flash) chooses which SD slot boots; from Linux, `fw_setenv boot_targets "mmc1 mmc0"; reboot`. Checked both ways on the board.
+- Toolchain: the kernel, U-Boot and root filesystem all build with the cross compiler that Buildroot builds from source (no PetaLinux/Vitis compiler); `build_all.sh` builds the whole open path into one SD image plus a QSPI image.
+- Verification: RTL simulations of `zm_base`, `hp_dma` and `ple_mac` (`pl/sim`, mutation-checked) and bounded formal proofs of `hp_dma`, `zm_base` and `ple_mac` (`pl/formal`); the formal run found two real DMA bugs (unaligned bursts crossing 4 KiB, `mode` read live), fixed and re-tested on hardware.
+- Debugging: OpenOCD + GDB over JTAG (`debug/`): both cores, SMP mode, hardware breakpoints, loading and running a bare-metal program. Single-stepping the live SMP kernel wedged the board in two attempts and is not supported.
+- Open items: the QSPI image built with the Buildroot compiler has not been flashed and boot-tested yet; USB device and host mode, and the 40-pin header with a real load, are not exercised on the open kernel (see `TESTING.md`).
 - Not independent of Xilinx tools: the DDR PHY tuning values in the PS7 init, and the U-Boot device tree (`pcw.dtsi`), both derived from the Vivado hardware export.
 
 ## Toolchain (not in the repo)
