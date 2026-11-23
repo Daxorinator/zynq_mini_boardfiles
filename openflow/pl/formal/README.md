@@ -10,4 +10,8 @@ rejection (`../sim`), and the rebuilt bitstreams pass the hardware tests (`../..
 The proof is bounded (not an unbounded induction proof) and covers the DMA engine through the HP0 and LED ports only, with a free CPU on GP0.
 
 `sby -f zm_base.sby bmc` runs the same AXI/HP0 rules on `zm_base` (the DMA engine plus the register file, header, timer and clock-meter logic, with the MMCM replaced by free outputs):
-passes for 120 steps (about 5 minutes). The PL Ethernet MAC front end (`ple_mac`) has no formal proof (it is mostly clock-domain crossings and DDR primitives); it is covered by the simulation `../sim/tb_ple_mac.v` (TX frame format and gap, RX capture, missed frames, truncation, counters; mutation-checked), the offline protocol test and the hardware tests.
+passes for 120 steps (about 5 minutes). `./run_ple_mac.sh [bmc|cover]` checks the PL Ethernet MAC front end (`ple_mac`): invariants on the TX state machine (state encoding, TXEN low when idle, preamble/gap counters in range, data only with TXEN) and the RX side
+(byte index within the 320-byte buffer, a frame in progress and a ready frame never coexist, stored length fits), proven for 150 steps with free clocks and a free PHY; the cover goals (a transmitted frame can complete,
+a received frame can become ready) are reached. A mutant that makes the TX state machine hang in the gap state is caught by the cover goal, a mutant that lets TXEN stay high when idle and one that accepts a frame while the
+buffer is full are caught by the invariants. Not caught by the bounded proof: a changed buffer limit (320 -> 330 needs over 300 bytes of depth); the simulation `../sim/tb_ple_mac.v` covers that one.
+The properties are written in `ple_mac_props.vh` and included into a generated copy of the design (Yosys cannot bind assertions to internal signals); `PLE_MAC_SRC` points the script at a different source for mutation checks.

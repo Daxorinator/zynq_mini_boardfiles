@@ -3,3 +3,7 @@ hp_dma_*/
 *_cover/
 zm_base/
 zm_base_*/
+ple_mac_f.v
+ple_mac_f_props.tmp
+ple_mac_bmc/
+formal_ps7_gp0.v
