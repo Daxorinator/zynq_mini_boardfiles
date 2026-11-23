@@ -1,0 +1,10 @@
+[Unit]
+Description=USB device mode: serial console + NCM Ethernet on the PS USB port
+After=local-fs.target
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/zynqmini-usb-gadget start
+ExecStop=/usr/local/sbin/zynqmini-usb-gadget stop
+[Install]
+WantedBy=multi-user.target

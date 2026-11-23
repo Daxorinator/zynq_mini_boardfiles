@@ -1,0 +1,14 @@
+[Unit]
+Description=Grow the root partition and filesystem to the whole SD card (first boot only)
+DefaultDependencies=no
+After=local-fs.target
+Before=sysinit.target
+ConditionPathExists=!/var/lib/zynqmini/firstboot-done
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/zynqmini-growfs
+ExecStartPost=/bin/mkdir -p /var/lib/zynqmini
+ExecStartPost=/bin/touch /var/lib/zynqmini/firstboot-done
+RemainAfterExit=yes
+[Install]
+WantedBy=sysinit.target

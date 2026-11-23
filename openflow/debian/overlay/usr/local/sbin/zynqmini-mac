@@ -1,0 +1,14 @@
+#!/bin/sh
+# usage: zynqmini-mac [--print] [iface]     (default iface eth0)
+PRINT=0; [ "$1" = "--print" ] && { PRINT=1; shift; }
+IFACE=${1:-eth0}
+root=$(sed -n 's|.*root=\(/dev/[^ ]*\).*|\1|p' /proc/cmdline)
+disk=$(basename "${root:-mmcblk0p2}" | sed 's/p[0-9]*$//')
+[ -r "/sys/block/$disk/device/cid" ] || disk=mmcblk0
+cid=$(cat "/sys/block/$disk/device/cid" 2>/dev/null) || { echo "zynqmini-mac: no CID, leaving MAC alone" >&2; exit 0; }
+h=$(printf 'zynqmini-%s:%s' "$IFACE" "$cid" | sha256sum | cut -c1-12)
+b0=$((0x$(echo "$h" | cut -c1-2)))
+b0=$(( (b0 & 0xFE) | 0x02 ))                      # unicast, locally administered
+mac=$(printf '%02x' "$b0"; echo "$h" | cut -c3-12 | sed 's/../:&/g')
+[ "$PRINT" = 1 ] && { echo "$mac  (from $disk CID $cid)"; exit 0; }
+ip link set dev "$IFACE" address "$mac" && echo "zynqmini-mac: $IFACE = $mac (from $disk)"

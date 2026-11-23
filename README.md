@@ -121,7 +121,8 @@ The board runs on two independent software stacks; pick one (both are kept worki
 | PL designs | Vivado (board files in `zynq_mini/`, overlays in `pynq/overlay`) | Yosys + nextpnr-xilinx + Project X-Ray (`openflow/pl`) |
 | Boot chain | Xilinx FSBL / PetaLinux U-Boot | hand-written PS7 init + U-Boot SPL, from SD or QSPI (`openflow/boot`) |
 | Kernel, root filesystem | PetaLinux/PYNQ image (`pynq/`) | kernel and hand-written device tree built from source, Buildroot userland (`openflow/linux`, `openflow/buildroot`) |
-| Python | the PYNQ library (Jupyter, Overlay, ...) | `zynqmini`: bitstream loading, registers, clocks, DMA buffers, interrupts (`openflow/py`) |
+| Python | the PYNQ library (Jupyter, Overlay, ...) | `zynqmini`: bitstream loading, registers and PYNQ-style overlays from JSON maps, clocks, DMA buffers, interrupts (`openflow/py`) |
+| Userland | Ubuntu 22.04 PYNQ image | Debian 12 with systemd, apt, Jupyter and the scientific stack (`openflow/debian`), or a small source-built Buildroot image |
 | Debugging | Vivado/Vitis | OpenOCD + GDB (`openflow/debug`), RTL simulation and formal checks (`openflow/pl/sim`, `openflow/pl/formal`) |
 | Needs | Vivado, PetaLinux, a PYNQ build | open-source tools only; `openflow/build_all.sh` builds everything into one SD image |
 | Does not have | | the PYNQ Python library, Jupyter, Ubuntu packages (the PYNQ image is still usable on the open kernel's boot chain, but PYNQ's own library does not run there) |

@@ -17,4 +17,5 @@ export PATH="$BR/host/bin:$PATH" CROSS_COMPILE=arm-buildroot-linux-gnueabihf-
 DEBUGFS="$BR/host/sbin/debugfs" python3 "$HERE/linux/mkimage.py" --rootfs-image "$BR/images/rootfs.ext4" \
   --boot-bin "$HERE/boot/build/out/BOOT.BIN" --u-boot-img "$HERE/boot/build/out/u-boot.img" --kernel-dir "$HERE/linux/build/out" --out "$O/zynqmini-open.img"
 cp "$HERE/boot/build/out/qspi_flash.bin" "$O/"
+if [ "${DEBIAN:-0}" = 1 ]; then "$HERE/debian/build.sh"; cp "$HERE/build/debian/zynqmini-debian.img" "$O/"; fi     # optional: DEBIAN=1 also builds the Debian image (an hour of qemu time)
 ls -la "$O"

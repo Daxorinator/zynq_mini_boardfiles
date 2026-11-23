@@ -1,0 +1,30 @@
+#!/bin/sh
+# usage: zynqmini-usb-role [host|device|none|status]
+R=$(ls /sys/class/usb_role/*/role 2>/dev/null | head -1)
+[ -n "$R" ] || { echo "zynqmini-usb-role: no role switch (kernel/device tree without usb-role-switch)" >&2; exit 1; }
+G=/sys/kernel/config/usb_gadget
+case "${1:-status}" in
+status) cat "$R" ;;
+host|none)
+    # unbind any gadget first, a bound gadget would be left half-alive
+    for u in "$G"/*/UDC; do [ -e "$u" ] && echo "" > "$u" 2>/dev/null; done
+    echo "$1" > "$R"; cat "$R" ;;
+device)
+    # Writing "device" while already in the gadget role is ignored by the driver (VBUS is never evaluated),
+    # so go through host. The device switch waits ~5 s ("timeout waiting for ... in OTGSC" is harmless).
+    # Cable must be plugged into the PC and no host-side device attached.
+    for u in "$G"/*/UDC; do [ -e "$u" ] && echo "" > "$u" 2>/dev/null; done
+    if [ "$(cat "$R")" = none ]; then
+        echo device > "$R"; sleep 6        # from "none" no detour is needed (no VBUS pulse towards the PC)
+    fi
+    if [ "$(cat "$R")" != device ] || [ -z "$(ls /sys/class/udc 2>/dev/null)" ]; then
+        echo host > "$R"; sleep 1; echo device > "$R"; sleep 6
+    fi
+    UDC=$(ls /sys/class/udc 2>/dev/null | head -1)
+    # rebind existing gadgets so the PC re-enumerates them (a role change alone leaves the PC link dead)
+    for d in "$G"/*/; do
+        [ -e "${d}UDC" ] && [ -n "$UDC" ] && echo "$UDC" > "${d}UDC" 2>/dev/null
+    done
+    cat "$R" ;;
+*) echo "usage: $0 [host|device|none|status]" >&2; exit 1 ;;
+esac

@@ -1,0 +1,30 @@
+#!/bin/sh
+# usage: zynqmini-usb-gadget start|stop      serial (ttyGS0 getty) + NCM Ethernet, board = 192.168.2.99/24 (PYNQ default)
+G=/sys/kernel/config/usb_gadget/zynqmini_net
+case "$1" in
+start)
+    [ -d "$G" ] && exit 0
+    zynqmini-usb-role device >/dev/null || exit 1
+    for m in libcomposite usb_f_acm usb_f_ncm; do modprobe "$m" || exit 1; done
+    mountpoint -q /sys/kernel/config || mount -t configfs none /sys/kernel/config
+    UDC=$(ls /sys/class/udc | head -1); [ -n "$UDC" ] || exit 1
+    mkdir -p "$G" && cd "$G" || exit 1
+    echo 0x1d6b > idVendor; echo 0x0104 > idProduct; echo 0x0200 > bcdUSB
+    echo 0xEF > bDeviceClass; echo 0x02 > bDeviceSubClass; echo 0x01 > bDeviceProtocol
+    mkdir -p strings/0x409 configs/c.1/strings/0x409 functions/acm.usb0 functions/ncm.usb0
+    echo ZYNQMININET01 > strings/0x409/serialnumber
+    echo "Bochen Jingxin" > strings/0x409/manufacturer; echo "ZYNQ MINI" > strings/0x409/product
+    echo "serial + ncm" > configs/c.1/strings/0x409/configuration
+    echo 02:5a:59:4d:00:01 > functions/ncm.usb0/host_addr; echo 02:5a:59:4d:00:02 > functions/ncm.usb0/dev_addr
+    ln -s functions/acm.usb0 configs/c.1/; ln -s functions/ncm.usb0 configs/c.1/
+    echo "$UDC" > UDC || exit 1
+    IF=$(cat functions/ncm.usb0/ifname)
+    ip addr flush dev "$IF"; ip addr add 192.168.2.99/24 dev "$IF"; ip link set "$IF" up
+    systemctl start serial-getty@ttyGS0.service ;;
+stop)
+    [ -d "$G" ] || exit 0
+    systemctl stop serial-getty@ttyGS0.service
+    echo "" > "$G/UDC"; rm -f "$G"/configs/c.1/acm.usb0 "$G"/configs/c.1/ncm.usb0
+    rmdir "$G"/configs/c.1/strings/0x409 "$G"/configs/c.1 "$G"/functions/* "$G"/strings/0x409 "$G" ;;
+*) echo "usage: $0 start|stop" >&2; exit 1 ;;
+esac

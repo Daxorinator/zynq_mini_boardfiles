@@ -1,0 +1,7 @@
+#!/bin/sh
+# grow partition 2 of the boot card to the end of the disk and the ext4 filesystem into it (a no-op when already full)
+root=$(sed -n 's|.*root=\(/dev/[^ ]*\).*|\1|p' /proc/cmdline); [ -b "$root" ] || exit 0
+disk=${root%p[0-9]}; part=${root##*p}
+echo ", +" | sfdisk --no-reread -N "$part" "$disk" >/dev/null 2>&1 || true
+partx -u "$disk" 2>/dev/null || true
+resize2fs "$root" || true
