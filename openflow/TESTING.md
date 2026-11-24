@@ -5,7 +5,7 @@ Everything else in `openflow/` was built and tested on the board (see the status
 1. ~~QSPI image from the Buildroot-compiler build~~ **done 2026-11-24**: flashed from Linux (`qspi_write.py`, readback matched), reset, U-Boot SPL then the open kernel booted from both SD slots. The previous flash contents are in `~/ps3/qspi_backup/mtd0_pre_buildroot_uboot.raw`.
 2. **The image from `build_all.sh`** (`build/open-image/zynqmini-open.img`, Buildroot userland with the Buildroot-built kernel): write it to a spare card, boot it from slot 2 (set `boot_targets` to `mmc1 mmc0` in the U-Boot console or with `fw_setenv`), run `/opt/zynqmini/tests/pltest_open.py`.
    (An equivalent image, built earlier with the same compiler, was booted and passed.)
-3. **USB device mode**: cable the board's USB port to a PC; the NCM + ACM gadget should enumerate (the UDC reports `suspended` until a host is connected). **USB host mode**: keyboard and a flash drive.
+3. **USB device mode and host mode: reported OK by the user on 2026-11-24 (not re-tested by me).** Original notes: **USB device mode**: cable the board's USB port to a PC; the NCM + ACM gadget should enumerate (the UDC reports `suspended` until a host is connected). **USB host mode**: keyboard and a flash drive.
 4. **Header test with a real load**, and a visual check of the OLED after a long uptime (the 40-pin header test passes with nothing connected).
 5. Re-flash the original PYNQ SD card if wanted (the slot-2 card was erased on purpose), and remove the temporary inbound firewall rule for OpenOCD (TCP 3333) on the Windows laptop.
 
