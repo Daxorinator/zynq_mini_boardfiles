@@ -8,7 +8,7 @@
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd); O=$HERE/build/open-image; mkdir -p "$O"
 PROJECTS=${PROJECTS:-"hp_dma zm_base ple_mac"}
-for p in $PROJECTS; do "$HERE/pl/build.sh" "$p"; done
+[ "${SKIP_PL:-0}" = 1 ] || for p in $PROJECTS; do "$HERE/pl/build.sh" "$p"; done     # SKIP_PL=1 reuses the bitstreams already in pl/build
 "$HERE/buildroot/build.sh"
 BR=${WORK_BR:-$HERE/build/buildroot/out}
 export PATH="$BR/host/bin:$PATH" CROSS_COMPILE=arm-buildroot-linux-gnueabihf-
