@@ -1,7 +1,7 @@
 """Physically contiguous, uncached DMA buffers for PL masters, from the zmbuf kernel driver (openflow/linux/zmbuf, /dev/zmbuf).
 The CPU mapping is write-combined/uncached, so no cache maintenance is needed before or after the PL touches the memory
 (`flush()` and `invalidate()` exist only so code written for cached buffers keeps working)."""
-import mmap, os, struct, fcntl
+import gc, mmap, os, struct, fcntl
 
 ZMBUF_ALLOC = 0xC0105A01            # _IOWR('Z', 1, struct { u64 size; u64 phys; })
 ZMBUF_FREE = 0x40105A02             # _IOW('Z', 2, same)
@@ -25,7 +25,12 @@ class Buffer:
     def __enter__(self): return self
     def __exit__(self, *a): self.close()
     def close(self):
-        self.mm.close()
+        try: self.mm.close()
+        except BufferError:                 # numpy views of the mapping still alive: collect dropped ones, then retry
+            gc.collect()
+            try: self.mm.close()
+            except BufferError:
+                raise BufferError("buffer still referenced: delete every numpy view of it (a.array, slices) before free()") from None
         try: fcntl.ioctl(self.fd, ZMBUF_FREE, struct.pack("QQ", 0, self.phys_addr))
         finally: os.close(self.fd)
 
@@ -41,7 +46,9 @@ class ContigArray:
     def __setitem__(self, i, v): self.array[i] = v
     def __len__(self): return len(self.array)
     def __array__(self, dtype=None, copy=None): return self.array if dtype is None else self.array.astype(dtype)
-    def free(self): self.buffer.close()
+    def free(self):
+        self.array = None                    # drop our own view so the mapping can be released
+        self.buffer.close()
     close = free
     def __enter__(self): return self
     def __exit__(self, *a): self.free()

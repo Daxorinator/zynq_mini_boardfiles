@@ -1,0 +1,7 @@
+# Keep the classic name eth0 for the PS GEM (the rest of the image - ifupdown,
+# zynqmini-mac.service - refers to eth0; the default policy would rename it to end0).
+[Match]
+Driver=macb
+
+[Link]
+Name=eth0
