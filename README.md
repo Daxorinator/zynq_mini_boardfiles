@@ -45,9 +45,13 @@ Pin assignments for these devices are in the docs. All except the PL Ethernet RG
 
 ## Releases
 
-The [latest release](../../releases/latest) has two downloads, with SHA-256 checksums in `SHA256SUMS`:
-- `zynq_mini_boardfiles.zip`: the Vivado board files. Install as described under [Installing](#installing).
-- `ZynqMini-3.1.2.img.zip`: a ready-to-flash PYNQ SD card image. Flash and boot it as described in [`pynq/BUILDING.md`](pynq/BUILDING.md#flash-and-boot), or build it yourself from [`pynq/`](pynq/).
+The [latest release](../../releases/latest) (v2.0.0) has these downloads, with SHA-256 checksums in `SHA256SUMS`; the release notes say what each one is for:
+- `zynq_mini_boardfiles.zip`: this repository (Vivado board files, PYNQ build, open flow, docs). Install the board files as described under [Installing](#installing).
+- `zynqmini-debian12.img.zip`: Debian 12 SD card image for the open-source kernel (systemd, ssh, apt, Jupyter, Python scientific stack, USB gadget, the `zynqmini` library).
+- `zynqmini-buildroot.img.zip`: small Buildroot SD card image for the open-source kernel (Python + numpy + the `zynqmini` library).
+- `qspi_flash.bin`: open bootloader (U-Boot SPL + U-Boot) for the on-board QSPI flash, so the cards need no bootloader.
+- `zm_base_overlay.zip`: the open-flow base overlay (bitstream + register map) for the `zynqmini` library.
+- The PYNQ v3.1.2 image is unchanged and stays in [v1.0.0](../../releases/tag/v1.0.0): `ZynqMini-3.1.2.img.zip`, flashed as described in [`pynq/BUILDING.md`](pynq/BUILDING.md#flash-and-boot).
 
 ## Installing
 0. Download the repo, or unzip `zynq_mini_boardfiles.zip` from the release
